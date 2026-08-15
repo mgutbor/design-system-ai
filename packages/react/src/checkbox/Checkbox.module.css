@@ -1,0 +1,26 @@
+.checkbox {
+  width: var(--space-4);
+  height: var(--space-4);
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--color-action-primary);
+  cursor: pointer;
+}
+
+.checkbox:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.checkbox:disabled {
+  cursor: not-allowed;
+}
+
+.checkbox--invalid {
+  outline: 2px solid var(--color-action-danger);
+  outline-offset: 2px;
+}
+
+.checkbox--invalid:focus-visible {
+  outline-color: var(--color-focus-ring);
+}

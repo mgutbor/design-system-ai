@@ -1,0 +1,142 @@
+{
+  "pairs": [
+    {
+      "id": "text-default-on-background",
+      "fg": "color.text.default",
+      "bg": "color.surface.background",
+      "target": 4.5
+    },
+    {
+      "id": "text-default-on-elevated",
+      "fg": "color.text.default",
+      "bg": "color.surface.elevated",
+      "target": 4.5
+    },
+    {
+      "id": "text-muted-on-background",
+      "fg": "color.text.muted",
+      "bg": "color.surface.background",
+      "target": 4.5
+    },
+    {
+      "id": "text-muted-on-elevated",
+      "fg": "color.text.muted",
+      "bg": "color.surface.elevated",
+      "target": 4.5
+    },
+    {
+      "id": "text-disabled-on-background",
+      "fg": "color.text.disabled",
+      "bg": "color.surface.background",
+      "target": 3.0
+    },
+    {
+      "id": "text-on-action-on-primary",
+      "fg": "color.text.on-action",
+      "bg": "color.action.primary",
+      "target": 4.5
+    },
+    {
+      "id": "text-on-action-on-primary-hover",
+      "fg": "color.text.on-action",
+      "bg": "color.action.primary-hover",
+      "target": 4.5
+    },
+    {
+      "id": "text-on-action-on-primary-active",
+      "fg": "color.text.on-action",
+      "bg": "color.action.primary-active",
+      "target": 4.5
+    },
+    {
+      "id": "text-on-action-on-danger",
+      "fg": "color.text.on-action",
+      "bg": "color.action.danger",
+      "target": 4.5
+    },
+    {
+      "id": "text-on-action-on-danger-hover",
+      "fg": "color.text.on-action",
+      "bg": "color.action.danger-hover",
+      "target": 4.5
+    },
+    {
+      "id": "text-on-action-on-danger-active",
+      "fg": "color.text.on-action",
+      "bg": "color.action.danger-active",
+      "target": 4.5
+    },
+    {
+      "id": "action-primary-on-background",
+      "fg": "color.action.primary",
+      "bg": "color.surface.background",
+      "target": 3.0
+    },
+    {
+      "id": "action-danger-on-background",
+      "fg": "color.action.danger",
+      "bg": "color.surface.background",
+      "target": 3.0
+    },
+    {
+      "id": "focus-ring-on-background",
+      "fg": "color.focus.ring",
+      "bg": "color.surface.background",
+      "target": 3.0
+    },
+    {
+      "id": "border-default-on-background",
+      "fg": "color.border.default",
+      "bg": "color.surface.background",
+      "target": 3.0
+    },
+    {
+      "id": "status-success-on-background",
+      "fg": "color.status.success",
+      "bg": "color.surface.background",
+      "target": 4.5
+    },
+    {
+      "id": "status-warning-on-background",
+      "fg": "color.status.warning",
+      "bg": "color.surface.background",
+      "target": 4.5
+    },
+    {
+      "id": "status-danger-on-background",
+      "fg": "color.status.danger",
+      "bg": "color.surface.background",
+      "target": 4.5
+    },
+    {
+      "id": "status-info-on-background",
+      "fg": "color.status.info",
+      "bg": "color.surface.background",
+      "target": 4.5
+    },
+    {
+      "id": "text-on-action-on-status-success",
+      "fg": "color.text.on-action",
+      "bg": "color.status.success",
+      "target": 4.5
+    },
+    {
+      "id": "text-on-action-on-status-warning",
+      "fg": "color.text.on-action",
+      "bg": "color.status.warning",
+      "target": 4.5
+    },
+    {
+      "id": "text-on-action-on-status-danger",
+      "fg": "color.text.on-action",
+      "bg": "color.status.danger",
+      "target": 4.5
+    },
+    {
+      "id": "text-on-action-on-status-info",
+      "fg": "color.text.on-action",
+      "bg": "color.status.info",
+      "target": 4.5
+    }
+  ]
+}

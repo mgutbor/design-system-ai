@@ -1,0 +1,10 @@
+{
+  "color": {
+    "text": {
+      "default": "color.gray.900",
+      "muted": "color.gray.600",
+      "disabled": "color.gray.500",
+      "on-action": "color.white"
+    }
+  }
+}

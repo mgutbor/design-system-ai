@@ -1,0 +1,10 @@
+{
+  "zindex": {
+    "base": "0",
+    "sticky": "100",
+    "dropdown": "1000",
+    "overlay": "2000",
+    "modal": "3000",
+    "toast": "4000"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "color": {
+    "action": {
+      "primary": "color.blue.600",
+      "primary-hover": "color.blue.700",
+      "primary-active": "color.blue.800",
+      "danger": "color.red.600",
+      "danger-hover": "color.red.700",
+      "danger-active": "color.red.800"
+    },
+    "status": {
+      "success": "color.green.700",
+      "warning": "color.amber.700",
+      "danger": "color.red.700",
+      "info": "color.blue.700"
+    }
+  }
+}

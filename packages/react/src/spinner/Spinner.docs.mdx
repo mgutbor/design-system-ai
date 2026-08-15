@@ -1,0 +1,30 @@
+# Spinner
+
+Indicador de progreso circular. **Por defecto es puramente decorativo**:
+`aria-hidden="true", sin rol y sin anuncio alguno para tecnologías asistivas.
+Solo comunica estado cuando se le pasa un `label`.
+
+## API
+
+| Prop | Tipo | Default | Descripción |
+|---|---|---|---|
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Tamaño visual (`space.3` / `space.4` / `space.6`). |
+| `label` | `string` | — | Cuando se provee, el spinner pasa a `role="status"` (aria-live polite) y anuncia el label. Sin label, es decorativo. |
+| resto | atributos de `<span>` | — | `className`, `data-*`, `aria-*`. |
+
+## Cuándo usar `label`
+
+- **Decorativo** (por defecto): el estado de carga ya lo comunica el texto
+  circundante (p. ej. un Button con "Processing…"). Añadir anuncio sería ruido.
+- **Comunicativo** (`label="Loading"`): el spinner ES la única señal de carga
+  (p. ej. una página que carga sin texto). `role="status"` anuncia el label al aparecer.
+
+## Accesibilidad
+
+- `prefers-reduced-motion`: la animación se desactiva.
+- El color lo hereda del contexto (`currentColor`) — no se usa color como única señal.
+
+## Ejemplos
+
+Los ejemplos canónicos viven en `Spinner.examples.tsx` (fuente única para
+stories, docs y retrieval).

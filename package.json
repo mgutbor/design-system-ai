@@ -1,0 +1,54 @@
+{
+  "name": "open-design-system-ai",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Open Design System AI — open source design system with documentation and an AI assistant.",
+  "packageManager": "pnpm@10.34.5",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint && eslint .storybook e2e --max-warnings 0",
+    "test": "turbo run test",
+    "validate": "turbo run validate",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "storybook": "pnpm -F @ods-ai/tokens generate && storybook dev -p 6006",
+    "build-storybook": "pnpm -F @ods-ai/tokens generate && storybook build",
+    "build:docs": "pnpm -F @ods-ai/docs build",
+    "build:playground": "pnpm -F @ods-ai/playground build",
+    "dev:docs": "pnpm -F @ods-ai/docs dev",
+    "dev:playground": "pnpm -F @ods-ai/playground dev",
+    "e2e": "playwright test -c e2e/playwright.config.ts"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@eslint/js": "^9.39.5",
+    "@ods-ai/tokens": "workspace:*",
+    "@playwright/test": "^1.62.1",
+    "@storybook/addon-a11y": "^10.5.8",
+    "@storybook/react-vite": "^10.5.8",
+    "@types/node": "^22.20.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "eslint": "^9.39.5",
+    "eslint-plugin-import-x": "^4.17.1",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "prettier": "^3.9.6",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "storybook": "^10.5.8",
+    "turbo": "^2.10.10",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.67.0",
+    "vitest": "^4.1.10"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

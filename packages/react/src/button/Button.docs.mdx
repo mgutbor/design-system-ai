@@ -1,0 +1,38 @@
+# Button
+
+Botón de acción con semántica nativa de `<button>`, variantes y estados definidos por tokens.
+
+## Cuándo usar
+
+- Una acción que el usuario puede ejecutar (guardar, enviar, eliminar).
+- **primary**: la acción principal de la vista (una por vista, idealmente).
+- **secondary**: acciones alternativas al lado de una primaria.
+- **ghost**: acciones de baja prominencia (tablas, listas).
+- **destructive**: acciones destructivas o irreversibles, siempre con confirmación previa.
+
+## Cuándo NO usar
+
+- Para navegar: usa un enlace estilizado (el DS no expone un `Button` polimórfico en v1 — ADR-007).
+- Para seleccionar una opción dentro de un formulario: usa `Select` (F2).
+
+## API
+
+| Prop      | Tipo                                                   | Default     | Descripción                              |
+| --------- | ------------------------------------------------------ | ----------- | ---------------------------------------- |
+| `variant` | `'primary' \| 'secondary' \| 'ghost' \| 'destructive'` | `'primary'` | Jerarquía visual de la acción            |
+| `size`    | `'sm' \| 'md' \| 'lg'`                                 | `'md'`      | Tamaño                                   |
+| `loading` | `boolean`                                              | `false`     | Spinner, deshabilita y marca `aria-busy` |
+
+Además extiende `React.ButtonHTMLAttributes<HTMLButtonElement>`: atributos nativos, `data-*`, `aria-*` y `ref` (como prop, React 19). El `type` por defecto es `button`.
+
+## Accesibilidad
+
+- Semántica nativa de `<button>`: Enter y Espacio funcionan sin código adicional.
+- Foco visible con anillo (`--color-focus-ring`) vía `:focus-visible`.
+- `loading` deshabilita la interacción y marca `aria-busy`; el spinner es decorativo (`aria-hidden`).
+- Contraste validado por tokens (WCAG 2.2 AA) para texto, estados y anillo de foco.
+- Respeta `prefers-reduced-motion` (el spinner no anima).
+
+## Ejemplos
+
+Los ejemplos canónicos viven en `Button.examples.tsx` (fuente única para stories, docs y retrieval).

@@ -1,0 +1,93 @@
+.shell {
+  display: grid;
+  grid-template-areas:
+    'header header'
+    'nav main';
+  grid-template-columns: 14rem 1fr;
+  grid-template-rows: auto 1fr;
+  min-height: 100dvh;
+}
+
+.header {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border-default);
+  position: sticky;
+  top: 0;
+  z-index: var(--zindex-sticky);
+  background-color: var(--color-surface-background);
+}
+
+.brand {
+  font-weight: var(--font-weight-semibold);
+  margin-right: var(--space-2);
+}
+
+.nav {
+  grid-area: nav;
+  border-right: 1px solid var(--color-border-default);
+  padding: var(--space-3);
+}
+
+.navList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  position: sticky;
+  top: calc(3.25rem + var(--space-3));
+}
+
+.navLink {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--color-text-default);
+  text-decoration: none;
+}
+
+.navLink:hover {
+  background-color: var(--color-surface-elevated);
+}
+
+.navLinkActive {
+  background-color: var(--color-surface-elevated);
+  font-weight: var(--font-weight-medium);
+}
+
+.main {
+  grid-area: main;
+  padding: var(--space-5) var(--space-6);
+  max-width: 52rem;
+}
+
+@media (max-width: 767px) {
+  .shell {
+    grid-template-areas:
+      'header'
+      'nav'
+      'main';
+    grid-template-columns: 1fr;
+  }
+
+  .nav {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border-default);
+    overflow-x: auto;
+  }
+
+  .navList {
+    flex-direction: row;
+    gap: var(--space-1);
+    position: static;
+  }
+
+  .navLink {
+    white-space: nowrap;
+  }
+}

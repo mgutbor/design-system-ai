@@ -1,0 +1,38 @@
+# Input
+
+Campo de texto de una línea basado en el `<input>` nativo. El componente
+gestiona únicamente su propio estado y apariencia; la asociación accesible
+(label, description, error) la resuelve `FormField`.
+
+## API
+
+| Prop | Tipo | Default | Descripción |
+|---|---|---|---|
+| `invalid` | `boolean` | `false` | Estado de error: borde `danger` + `aria-invalid="true"`. |
+| resto | atributos nativos de `<input>` | — | `value`/`defaultValue`, `disabled`, `readOnly`, `required`, `placeholder`, `aria-*`, `data-*`, `size`, `ref`. |
+
+No se añaden props propias más allá de `invalid`: todo lo demás es el API
+nativa del elemento.
+
+## Estados visuales
+
+- **default**: borde `color.border.default` sobre `color.surface.background`.
+- **focus**: anillo `color.focus.ring` (solo `:focus-visible`).
+- **disabled**: fondo `color.surface.elevated` + texto `color.text.disabled`; no recibe foco.
+- **readOnly**: legible, sin atenuar, sigue recibiendo foco.
+- **invalid**: borde `color.action.danger` + `aria-invalid="true"`.
+
+El placeholder usa `color.text.muted`.
+
+## Accesibilidad
+
+- El naming del campo lo provee `FormField` (`label` + `htmlFor`) o un
+  `aria-label`/`aria-labelledby` si se usa aislado.
+- El error se comunica con `aria-invalid` (máquina) y texto visible de error
+  (persona) — nunca solo con color.
+- Estados de error: consulta `FormField` para la asociación `aria-describedby`.
+
+## Ejemplos
+
+Los ejemplos canónicos viven en `Input.examples.tsx` (fuente única para
+stories, docs y retrieval).

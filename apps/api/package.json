@@ -1,0 +1,36 @@
+{
+  "name": "@ods-ai/api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Thin HTTP API over AI Core for Open Design System AI. F7: POST /api/ask + GET /api/health. No retrieval, no prompting, no model knowledge — AI Core does all of it.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "dev": "tsx watch src/entrypoints/node.ts",
+    "start": "tsx src/entrypoints/node.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run apps/api"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.1",
+    "@ods-ai/ai-core": "workspace:*",
+    "@ods-ai/ai-providers": "workspace:*",
+    "hono": "^4.13.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "eslint": "^9.39.5",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  }
+}

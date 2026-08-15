@@ -1,0 +1,33 @@
+{
+  "name": "@ods-ai/tokens",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Design tokens for Open Design System AI: primitive, semantic and theme layers with generated CSS and TypeScript.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/tokens.d.ts",
+      "import": "./dist/tokens.mjs"
+    },
+    "./tokens.css": "./dist/tokens.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "generate": "tsx src/scripts/generate.ts",
+    "validate": "tsx src/scripts/validate.ts",
+    "build": "pnpm generate && pnpm validate",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run packages/tokens",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "eslint": "^9.39.5",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  }
+}

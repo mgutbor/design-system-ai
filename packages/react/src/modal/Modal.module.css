@@ -1,0 +1,46 @@
+.modal {
+  border: none;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  width: min(calc(100vw - var(--space-8)), 32rem);
+  max-height: calc(100dvh - var(--space-8));
+}
+
+/* Scrim compuesto de la paleta existente (no es un token nuevo). */
+.modal::backdrop {
+  background-color: color-mix(in srgb, var(--color-gray-900) 50%, transparent);
+}
+
+.panel {
+  box-sizing: border-box;
+  background-color: var(--color-surface-background);
+  color: var(--color-text-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  max-height: inherit;
+  overflow-y: auto;
+}
+
+.title {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--font-leading-tight);
+  color: var(--color-text-default);
+}
+
+.description {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-sm);
+  line-height: var(--font-leading-normal);
+  color: var(--color-text-muted);
+}
+
+.content {
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-sm);
+  line-height: var(--font-leading-normal);
+}

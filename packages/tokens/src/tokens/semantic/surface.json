@@ -1,0 +1,8 @@
+{
+  "color": {
+    "surface": {
+      "background": "color.gray.50",
+      "elevated": "color.gray.100"
+    }
+  }
+}

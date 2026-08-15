@@ -1,0 +1,320 @@
+import { describe, expect, it, vi } from 'vitest'
+import { MockProvider, NvidiaProvider, NvidiaProviderError } from '@ods-ai/ai-providers'
+import { AIProviderError, type AIProvider, type AIResponse } from '@ods-ai/ai-core'
+import { createApp } from './app'
+
+const BASE = 'http://localhost'
+
+function post(app: ReturnType<typeof createApp>, path: string, body?: unknown) {
+  return app.request(`${BASE}${path}`, {
+    method: 'POST',
+    headers: body !== undefined ? { 'Content-Type': 'application/json' } : {},
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  })
+}
+
+describe('POST /api/ask (F7 §7–§10)', () => {
+  it('1. valid POST → 200 with a grounded answer (MockProvider)', async () => {
+    const app = createApp({ provider: new MockProvider() })
+    const res = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
+    expect(res.status).toBe(200)
+    const data = (await res.json()) as {
+      requestId: string
+      answer: string
+      referencedComponents: string[]
+      confidence: string
+      hasRelevantContext: boolean
+      providerId: string
+      retrieval: { query: string; components: unknown[]; minScore: number }
+    }
+    expect(typeof data.requestId).toBe('string')
+    expect(data.referencedComponents).toContain('button')
+    expect(data.hasRelevantContext).toBe(true)
+    expect(data.providerId).toBe('mock')
+    expect(data.retrieval.query).toBe('¿Cómo uso Button?')
+    expect(data.retrieval.minScore).toBe(20)
+  })
+
+  it('2. Button → grounded response', async () => {
+    const app = createApp({ provider: new MockProvider() })
+    const res = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
+    const data = (await res.json()) as { referencedComponents: string[] }
+    expect(data.referencedComponents).toContain('button')
+  })
+
+  it('3. Input → grounded response', async () => {
+    const app = createApp({ provider: new MockProvider() })
+    const res = await post(app, '/api/ask', { question: '¿Cómo valido un Input?' })
+    const data = (await res.json()) as { referencedComponents: string[] }
+    expect(data.referencedComponents).toContain('input')
+  })
+
+  it('4. FormField → grounded response', async () => {
+    const app = createApp({ provider: new MockProvider() })
+    const res = await post(app, '/api/ask', { question: '¿Cómo funciona FormField con errores?' })
+    const data = (await res.json()) as { referencedComponents: string[] }
+    expect(data.referencedComponents).toContain('form-field')
+  })
+
+  it('5. DatePicker → refusal (no provider call, confidence none)', async () => {
+    const mock = new MockProvider()
+    const spy = vi.spyOn(mock, 'chat')
+    const app = createApp({ provider: mock })
+    const res = await post(app, '/api/ask', { question: 'Necesito un DatePicker' })
+    expect(res.status).toBe(200)
+    const data = (await res.json()) as {
+      confidence: string
+      referencedComponents: string[]
+      hasRelevantContext: boolean
+      answer: string
+    }
+    expect(data.confidence).toBe('none')
+    expect(data.referencedComponents).toEqual([])
+    expect(data.hasRelevantContext).toBe(false)
+    expect(data.answer).toContain('No existe documentación relevante')
+    // The refusal must never call the provider.
+    expect(spy).not.toHaveBeenCalled()
+  })
+
+  it('6. empty body → 400', async () => {
+    const app = createApp({ provider: new MockProvider() })
+    const res = await post(app, '/api/ask', undefined)
+    expect(res.status).toBe(400)
+  })
+
+  it('7. missing question → 400', async () => {
+    const app = createApp({ provider: new MockProvider() })
+    const res = await post(app, '/api/ask', {})
+    expect(res.status).toBe(400)
+  })
+
+  it('8. question not a string → 400', async () => {
+    const app = createApp({ provider: new MockProvider() })
+    const res = await post(app, '/api/ask', { question: 42 })
+    expect(res.status).toBe(400)
+  })
+
+  it('9. empty question → 400', async () => {
+    const app = createApp({ provider: new MockProvider() })
+    const res = await post(app, '/api/ask', { question: '   ' })
+    expect(res.status).toBe(400)
+  })
+
+  it('9b. question too long → 400', async () => {
+    const app = createApp({ provider: new MockProvider() })
+    const res = await post(app, '/api/ask', { question: 'a'.repeat(4001) })
+    expect(res.status).toBe(400)
+  })
+
+  it('10. provider error → safe status (502) without internals', async () => {
+    const failing: AIProvider = {
+      id: 'mock',
+      chat: async () => {
+        throw new Error('ECONNREFUSED /Users/secret/node_modules/x')
+      },
+    }
+    const app = createApp({ provider: failing })
+    const res = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
+    // A provider failure is a 502 (bad gateway), never 200, never internals.
+    expect(res.status).toBe(502)
+    const text = await res.text()
+    expect(text).not.toContain('ECONNREFUSED')
+    expect(text).not.toContain('node_modules')
+    expect(text).not.toContain('/Users/')
+  })
+
+  it('10b. AIProviderError with auth cause → 502', async () => {
+    const failing: AIProvider = {
+      id: 'mock',
+      chat: async () => {
+        throw new AIProviderError(
+          'mock',
+          'provider failed',
+          new NvidiaProviderError('auth', 'bad key'),
+        )
+      },
+    }
+    const app = createApp({ provider: failing })
+    const res = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
+    expect(res.status).toBe(502)
+  })
+
+  it('11. provider timeout → 503', async () => {
+    const failing: AIProvider = {
+      id: 'mock',
+      chat: async () => {
+        throw new AIProviderError(
+          'mock',
+          'provider failed',
+          new NvidiaProviderError('timeout', 'timed out'),
+        )
+      },
+    }
+    const app = createApp({ provider: failing })
+    const res = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
+    expect(res.status).toBe(503)
+  })
+
+  it('12. provider rate limit → 429', async () => {
+    const failing: AIProvider = {
+      id: 'mock',
+      chat: async () => {
+        throw new AIProviderError(
+          'mock',
+          'provider failed',
+          new NvidiaProviderError('rate_limit', 'slow down'),
+        )
+      },
+    }
+    const app = createApp({ provider: failing })
+    const res = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
+    expect(res.status).toBe(429)
+  })
+
+  it('13. invalid provider response → safe error (never a fake success)', async () => {
+    const invalid: AIProvider = {
+      id: 'mock',
+      chat: async () => ({ content: 42 }) as unknown as AIResponse,
+    }
+    const app = createApp({ provider: invalid })
+    const res = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
+    // An invalid provider response is a provider failure (502), never a 200.
+    expect(res.status).toBe(502)
+  })
+
+  it('14. no secrets leak in responses', async () => {
+    const app = createApp({ provider: new MockProvider() })
+    const res = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
+    const text = await res.text()
+    expect(text).not.toContain('NVIDIA_API_KEY')
+    expect(text).not.toContain('Authorization')
+    expect(text).not.toContain('Bearer ')
+  })
+
+  it('15. no internal paths leak in responses', async () => {
+    const app = createApp({ provider: new MockProvider() })
+    const res = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
+    const text = await res.text()
+    expect(text).not.toContain('packages/')
+    expect(text).not.toContain('node_modules')
+    expect(text).not.toContain('sourcePath')
+    expect(text).not.toContain('/Users/')
+  })
+
+  it('16. MockProvider works end-to-end offline (no key, no internet)', async () => {
+    const app = createApp({ provider: new MockProvider() })
+    const res = await post(app, '/api/ask', {
+      question: '¿Qué componente sirve para seleccionar una opción?',
+    })
+    expect(res.status).toBe(200)
+    const data = (await res.json()) as { referencedComponents: string[] }
+    expect(data.referencedComponents).toContain('select')
+  })
+
+  it('17. NvidiaProvider and MockProvider satisfy the same port through the API', async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            choices: [{ message: { role: 'assistant', content: 'Usa Select.' } }],
+            model: 'nvidia-test',
+            usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+    )
+    const nvidia = new NvidiaProvider({
+      apiKey: 'test-key',
+      model: 'nvidia-test',
+      fetch: fetchMock as unknown as typeof fetch,
+    })
+    const app = createApp({ provider: nvidia })
+    const res = await post(app, '/api/ask', {
+      question: '¿Qué componente sirve para seleccionar una opción?',
+    })
+    expect(res.status).toBe(200)
+    const data = (await res.json()) as {
+      providerId: string
+      answer: string
+      referencedComponents: string[]
+    }
+    expect(data.providerId).toBe('nvidia')
+    expect(data.answer).toBe('Usa Select.')
+    expect(data.referencedComponents).toContain('select')
+  })
+})
+
+describe('CORS (F5: docs UI consumes /api/ask cross-origin)', () => {
+  it('OPTIONS preflight → 204 with CORS headers', async () => {
+    const app = createApp({ provider: new MockProvider() })
+    const res = await app.request(`${BASE}/api/ask`, { method: 'OPTIONS' })
+    expect(res.status).toBe(204)
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*')
+    expect(res.headers.get('Access-Control-Allow-Methods')).toContain('POST')
+    expect(res.headers.get('Access-Control-Allow-Headers')).toContain('Content-Type')
+  })
+
+  it('POST /api/ask response carries the CORS header (docs origin can read it)', async () => {
+    const app = createApp({ provider: new MockProvider() })
+    const res = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
+    expect(res.status).toBe(200)
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*')
+  })
+})
+
+describe('GET /api/health (ADR-005)', () => {
+  it('returns ok without exposing the provider key', async () => {
+    const app = createApp({ provider: new MockProvider() })
+    const res = await app.request(`${BASE}/api/health`)
+    expect(res.status).toBe(200)
+    const data = (await res.json()) as { status: string; provider: string }
+    expect(data.status).toBe('ok')
+    expect(data.provider).toBe('mock')
+    const healthRes = await app.request(`${BASE}/api/health`)
+    const text = await healthRes.text()
+    expect(text).not.toContain('NVIDIA')
+  })
+})
+
+describe('grounding invariant through HTTP (F7 §11)', () => {
+  it('referencedComponents ⊆ gate-passing components, always', async () => {
+    for (const question of [
+      '¿Cómo uso Button?',
+      '¿Qué componentes tienen invalid?',
+      'Necesito un DatePicker',
+      'control de formulario',
+    ]) {
+      const app = createApp({ provider: new MockProvider() })
+      const res = await post(app, '/api/ask', { question })
+      const data = (await res.json()) as {
+        referencedComponents: string[]
+        retrieval: { components: Array<{ component: string; score: number }>; minScore: number }
+        hasRelevantContext: boolean
+      }
+      const gated = new Set(data.retrieval.components.map((c) => c.component))
+      for (const ref of data.referencedComponents) {
+        expect(gated.has(ref), `${question}: ${ref} not in gate-passing set`).toBe(true)
+      }
+      // When there is no relevant context, nothing is referenced.
+      if (!data.hasRelevantContext) {
+        expect(data.referencedComponents).toEqual([])
+      }
+    }
+  })
+})
+
+describe('request/response contract (F7 §7)', () => {
+  it('response fields derive from AIAnswer without extra invented fields', async () => {
+    const app = createApp({ provider: new MockProvider() })
+    const res = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
+    const data = (await res.json()) as Record<string, unknown>
+    expect(data.answer).toBeDefined()
+    expect(data.referencedComponents).toBeDefined()
+    expect(data.confidence).toBeDefined()
+    expect(data.hasRelevantContext).toBeDefined()
+    expect(data.providerId).toBeDefined()
+    expect(data.model).toBeDefined()
+    expect(data.retrieval).toBeDefined()
+    expect(data.requestId).toBeDefined()
+  })
+})

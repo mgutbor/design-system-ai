@@ -1,0 +1,41 @@
+# Modal
+
+Diálogo modal controlado construido sobre el elemento nativo `<dialog>` con
+`showModal()`. El navegador aporta la capa superior (top layer), el backdrop,
+la **contención de foco**, el fondo inerte y el cierre con Escape; el
+componente gestiona internamente el restore de foco y las asociaciones ARIA.
+**No hay API pública de focus management.**
+
+## API
+
+| Prop | Tipo | Default | Descripción |
+|---|---|---|---|
+| `open` | `boolean` | — | Visibilidad controlada. |
+| `onClose` | `() => void` | — | Se llama cuando el usuario solicita cerrar (Escape o backdrop). |
+| `title` | `string` | — | Título, asociado con `aria-labelledby`. |
+| `description` | `string` | — | Descripción, asociada con `aria-describedby`. |
+| `closeOnEscape` | `boolean` | `true` | Permite cerrar con Escape. |
+| `closeOnBackdrop` | `boolean` | `true` | Permite cerrar haciendo click fuera del panel. |
+| `children` | `ReactNode` | — | Contenido (acciones, formularios…). |
+
+## Comportamiento
+
+- **Foco inicial**: `showModal()` enfoca el primer elemento enfocable del diálogo (nativo).
+- **Focus trap**: contención nativa mientras está abierto (nativo).
+- **Escape**: evento `cancel` — se previene el cierre nativo y se controla por estado.
+- **Restore de foco**: al cerrar, el foco vuelve al elemento que abrió el modal (interno).
+- **Contenido exterior**: el fondo queda inerte mientras el modal está abierto (nativo).
+- **Contenido largo**: el panel hace scroll interno (`max-height` + `overflow-y`).
+- **StrictMode/React 19**: el efecto de apertura es idempotente (`if (!dialog.open)`).
+
+## Accesibilidad
+
+- `role="dialog"` (nativo) + `aria-modal="true"`.
+- `aria-labelledby` (título) y `aria-describedby` (descripción) gestionados internamente.
+- Se recomienda incluir siempre una acción explícita de cierre (p. ej. un
+  `Button` "Cancel"/"Close") — Escape no es descubrible por sí solo.
+
+## Ejemplos
+
+Los ejemplos canónicos viven en `Modal.examples.tsx` (fuente única para
+stories, docs y retrieval).

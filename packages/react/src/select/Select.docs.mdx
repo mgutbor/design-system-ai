@@ -1,0 +1,40 @@
+# Select
+
+Selector de una sola opción basado en el `<select>` nativo — el patrón
+accesible correcto para selección única. Teclado (flechas, type-ahead), popup
+y los roles `combobox`/`listbox` los aporta el propio elemento; no se
+reimplementa un dropdown custom.
+
+## API
+
+| Prop | Tipo | Default | Descripción |
+|---|---|---|---|
+| `invalid` | `boolean` | `false` | Estado de error: borde `color.action.danger` + `aria-invalid="true"`. |
+| resto | atributos nativos de `<select>` | — | `value`/`defaultValue`, `disabled`, `required`, `name`, `size`, `aria-*`, `data-*`, `ref`. |
+| `children` | `<option>` | — | Las opciones del selector. |
+
+No hay más props propias; la selección múltiple (`multiple`) queda fuera del
+alcance v1 (patrón distinto).
+
+## Estados visuales
+
+- **default**: borde `color.border.default` sobre `color.surface.background`.
+- **focus**: anillo `color.focus.ring` (solo `:focus-visible`).
+- **disabled**: fondo `color.surface.elevated` + texto `color.text.disabled`; no recibe foco.
+- **invalid**: borde `color.action.danger` + `aria-invalid="true"`.
+
+La flecha nativa del navegador se mantiene en v1 (estilizado custom diferido).
+
+## Accesibilidad
+
+- El naming se resuelve con `FormField` (label + `htmlFor`) o con
+  `aria-label`/`aria-labelledby`.
+- El estado de error se comunica con `aria-invalid` + texto visible (nunca
+  solo color) — usa `FormField` para el mensaje.
+- Para forzar una elección, usa una opción placeholder deshabilitada
+  (`<option value="" disabled>`), como en los ejemplos canónicos.
+
+## Ejemplos
+
+Los ejemplos canónicos viven en `Select.examples.tsx` (fuente única para
+stories, docs y retrieval).

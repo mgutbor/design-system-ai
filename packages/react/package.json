@@ -1,0 +1,52 @@
+{
+  "name": "@ods-ai/react",
+  "version": "0.0.0",
+  "private": true,
+  "description": "React components for Open Design System AI.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./metadata": {
+      "types": "./dist/metadata/index.json",
+      "default": "./dist/metadata/index.json"
+    }
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "metadata": "vite-node src/scripts/generate-metadata.ts",
+    "build": "pnpm metadata",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run packages/react"
+  },
+  "peerDependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@ods-ai/tokens": "workspace:*",
+    "@storybook/react-vite": "^10.5.8",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.4",
+    "@types/node": "^22.20.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "eslint": "^9.39.5",
+    "jest-axe": "^11.0.0",
+    "jsdom": "^30.0.1",
+    "react": "^19.2.8",
+    "react-docgen-typescript": "^2.4.0",
+    "react-dom": "^19.2.8",
+    "typescript": "^5.9.3",
+    "vite": "^8.2.1",
+    "vite-node": "^6.0.0",
+    "vitest": "^4.1.10"
+  }
+}

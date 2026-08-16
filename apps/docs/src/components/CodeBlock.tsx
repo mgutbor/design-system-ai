@@ -6,7 +6,7 @@ import styles from './CodeBlock.module.css'
  * Code block with copy button. The `code` string always comes from a
  * canonical example (componentExamples) — never from duplicated snippets.
  */
-export function CodeBlock({ code }: { code: string }) {
+export function CodeBlock({ code, language = 'tsx' }: { code: string; language?: string }) {
   const [copied, setCopied] = useState(false)
 
   const copy = async (): Promise<void> => {
@@ -23,7 +23,7 @@ export function CodeBlock({ code }: { code: string }) {
   return (
     <div className={styles.wrapper}>
       <div className={styles.toolbar}>
-        <span className={styles.language}>tsx</span>
+        <span className={styles.language}>{language}</span>
         <Button
           size="sm"
           variant="secondary"

@@ -68,6 +68,13 @@ Prohibido: api → knowledge/tokens/react · playground → ai-* · react → ai
 > knowledge sigue **fuera del runtime** de apps/docs: las únicas referencias
 > son el script de generación y el test de frescura (tooling/test), y un test
 > guarda que `src/` nunca importe knowledge.
+>
+> **Excepción de tooling (P1 — tokens)**: la página `/foundations/tokens`
+> consume otro artefacto generado (`apps/docs/src/data/tokens-data.generated.ts`,
+> `pnpm generate:docs-tokens-data`) con los datos que **no** forman parte del
+> export público de `@ods-ai/tokens` (referencias semantic → primitive y pares
+> de `contrast.json`). Rutas y valores proceden del export público (objeto
+> `tokens` + CSS custom properties); `packages/tokens` no se modifica.
 
 | Paquete                | Rol                                            | Publicación                           |
 | ---------------------- | ---------------------------------------------- | ------------------------------------- |

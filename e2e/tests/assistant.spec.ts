@@ -45,7 +45,9 @@ test('assistant: consulta sin contexto → refusal, sin fuentes', async ({ page 
   ).toBeVisible()
   // No hay ninguna fuente enlazada (los enlaces del nav no son componentes).
   await expect(
-    page.getByRole('link', { name: /^(Button|Input|Select|Checkbox|Modal|Badge|Spinner|FormField)$/ }),
+    page.getByRole('link', {
+      name: /^(Button|Input|Select|Checkbox|Modal|Badge|Spinner|FormField)$/,
+    }),
   ).not.toBeVisible()
 })
 

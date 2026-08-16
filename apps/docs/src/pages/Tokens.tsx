@@ -63,68 +63,72 @@ export default function Tokens() {
       </div>
 
       <section aria-labelledby="semantic-heading">
-        <h1 id="semantic-heading">Semantic tokens</h1>
+        <h1 id="semantic-heading">Tokens semánticos</h1>
         <p>
-          Semantic tokens express intent (actions, status, text, surfaces). They resolve to
-          primitives and adapt to the active theme automatically.
+          Los tokens semánticos expresan intención (acciones, estados, texto, superficies). Se
+          resuelven a tokens primitivos y se adaptan automáticamente al tema activo.
         </p>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th scope="col">Token</th>
-              <th scope="col">Light</th>
-              <th scope="col">Dark</th>
-              <th scope="col">CSS variable</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(semanticGroups).flatMap(([category, entries]) => [
-              <tr key={`${category}-header`} className={styles.categoryRow}>
-                <th scope="rowgroup" colSpan={4}>
-                  color.{category}
-                </th>
-              </tr>,
-              ...entries.map((entry) => (
-                <tr key={entry.path}>
-                  <th scope="row" className={styles.mono}>
-                    {entry.path}
+        <div className={styles.scroll}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th scope="col">Token</th>
+                <th scope="col">Claro</th>
+                <th scope="col">Oscuro</th>
+                <th scope="col">Variable CSS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(semanticGroups).flatMap(([category, entries]) => [
+                <tr key={`${category}-header`} className={styles.categoryRow}>
+                  <th scope="rowgroup" colSpan={4}>
+                    color.{category}
                   </th>
-                  <td>
-                    <Swatch value={entry.value} />
-                  </td>
-                  <td>
-                    {darkValues[entry.path] ? <Swatch value={darkValues[entry.path]!} /> : '—'}
-                  </td>
-                  <td className={styles.mono}>{varName(entry.path)}</td>
-                </tr>
-              )),
-            ])}
-          </tbody>
-        </table>
-      </section>
-
-      <section aria-labelledby="primitive-heading">
-        <h2 id="primitive-heading">Primitive tokens</h2>
-        <p>
-          The base palette and scales. Components never reference these directly — semantic tokens
-          do.
-        </p>
-        {Object.entries(primitiveGroups).map(([category, entries]) => (
-          <div key={category} className={styles.category}>
-            <h3>{category}</h3>
-            <table className={styles.table}>
-              <tbody>
-                {entries.map((entry) => (
+                </tr>,
+                ...entries.map((entry) => (
                   <tr key={entry.path}>
                     <th scope="row" className={styles.mono}>
                       {entry.path}
                     </th>
-                    <td>{isColor(entry) ? <Swatch value={entry.value} /> : entry.value}</td>
+                    <td>
+                      <Swatch value={entry.value} />
+                    </td>
+                    <td>
+                      {darkValues[entry.path] ? <Swatch value={darkValues[entry.path]!} /> : '—'}
+                    </td>
                     <td className={styles.mono}>{varName(entry.path)}</td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                )),
+              ])}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section aria-labelledby="primitive-heading">
+        <h2 id="primitive-heading">Tokens primitivos</h2>
+        <p>
+          La paleta y las escalas base. Los componentes nunca los referencian directamente — lo
+          hacen los tokens semánticos.
+        </p>
+        {Object.entries(primitiveGroups).map(([category, entries]) => (
+          <div key={category} className={styles.category}>
+            <h3>{category}</h3>
+            <div className={styles.scroll}>
+              <table className={styles.table}>
+                <tbody>
+                  {entries.map((entry) => (
+                    <tr key={entry.path}>
+                      <th scope="row" className={styles.mono}>
+                        {entry.path}
+                      </th>
+                      <td>{isColor(entry) ? <Swatch value={entry.value} /> : entry.value}</td>
+                      <td className={styles.mono}>{varName(entry.path)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         ))}
       </section>

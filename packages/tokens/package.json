@@ -1,9 +1,13 @@
 {
   "name": "@ods-ai/tokens",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "private": false,
   "description": "Design tokens for Open Design System AI: primitive, semantic and theme layers with generated CSS and TypeScript.",
   "type": "module",
+  "license": "MIT",
+  "main": "./dist/tokens.mjs",
+  "module": "./dist/tokens.mjs",
+  "types": "./dist/tokens.d.ts",
   "exports": {
     ".": {
       "types": "./dist/tokens.d.ts",
@@ -13,6 +17,21 @@
   },
   "files": [
     "dist"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "design-tokens",
+    "design-system",
+    "css-variables",
+    "theming"
   ],
   "scripts": {
     "generate": "tsx src/scripts/generate.ts",

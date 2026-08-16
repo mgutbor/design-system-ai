@@ -1,13 +1,17 @@
 {
   "name": "@ods-ai/react",
-  "version": "0.0.0",
-  "private": true,
-  "description": "React components for Open Design System AI.",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Accesibles React components for Open Design System AI (WCAG 2.2 AA): Button, Input, FormField, Checkbox, Select, Modal, Badge, Spinner.",
   "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./metadata": {
       "types": "./dist/metadata/index.json",
@@ -15,15 +19,31 @@
     }
   },
   "files": [
-    "src",
     "dist"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "design-system",
+    "react",
+    "accessibility",
+    "wcag",
+    "typescript"
   ],
   "scripts": {
     "metadata": "vite-node src/scripts/generate-metadata.ts",
-    "build": "pnpm metadata",
+    "build": "pnpm metadata && tsc -p tsconfig.build.json && node scripts/copy-css.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
-    "test": "vitest run packages/react"
+    "test": "vitest run packages/react",
+    "clean": "rm -rf dist"
   },
   "peerDependencies": {
     "react": "^19.2.8",

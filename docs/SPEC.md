@@ -1,8 +1,11 @@
 # SPEC v3 — Open Design System AI
 
-Especificación arquitectónica definitiva. Estado: **aprobada**. Actualizada tras la
-reconciliación del roadmap (F0–F4 completas · F5 ≈75% · F6 ≈30%) para reflejar la
-implementación real validada (retrieval server-side, `POST /api/ask`, defaults reales).
+Especificación arquitectónica definitiva. Estado: **aprobada**. Estado real del
+proyecto: **F0–F5 completas** · **F6 release candidate ready** · **proyecto ready
+to publish** (validado con llamada real a NVIDIA Build; solo falta publicar
+`@ods-ai/tokens` y `@ods-ai/react` desde el release workflow). Actualizada para
+reflejar la implementación real validada (retrieval server-side, `POST /api/ask`,
+defaults reales).
 Las fases de hardening F5.1/F6.1/F7.1 se incorporan como auditorías transversales, no
 como fases funcionales. Los ADRs en `docs/adr/` desarrollan cada decisión.
 

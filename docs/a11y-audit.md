@@ -73,15 +73,15 @@ Leyenda: **PASS** (verificado) · **FAIL** (incumplimiento) · **NO VERIFICABLE*
 
 ## Select
 
-| Criterio                          | Estado         | Nota                                                                                                                                                        |
-| --------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Criterio                          | Estado         | Nota                                                                                                                                                         |
+| --------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Patrón de selección única         | PASS           | `<select>` nativo (roles implícitos `combobox`/`listbox`, popup y navegación por teclado del navegador — documentado en la ficha de Select y auditado en F2) |
-| Teclado (↑/↓/Home/End/Type-ahead) | PASS           | Nativo                                                                                                                                                      |
-| Nombre accesible                  | PASS           | Vía FormField o `aria-label`                                                                                                                                |
-| Estado inválido                   | PASS           | `aria-invalid`                                                                                                                                              |
-| Contraste                         | PASS           | Validado                                                                                                                                                    |
-| axe                               | PASS           | `Select.test.tsx`                                                                                                                                           |
-| Lector de pantalla                | NO VERIFICABLE | —                                                                                                                                                           |
+| Teclado (↑/↓/Home/End/Type-ahead) | PASS           | Nativo                                                                                                                                                       |
+| Nombre accesible                  | PASS           | Vía FormField o `aria-label`                                                                                                                                 |
+| Estado inválido                   | PASS           | `aria-invalid`                                                                                                                                               |
+| Contraste                         | PASS           | Validado                                                                                                                                                     |
+| axe                               | PASS           | `Select.test.tsx`                                                                                                                                            |
+| Lector de pantalla                | NO VERIFICABLE | —                                                                                                                                                            |
 
 ## Modal
 

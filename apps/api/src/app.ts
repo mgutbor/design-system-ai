@@ -27,18 +27,61 @@ export interface AppDeps {
   topK?: number
   /** Rate limiting por IP (en memoria). Si se omite, no se aplica. */
   rateLimit?: RateLimitConfig
+  /**
+   * Orígenes permitidos por CORS (V1 FINAL, FASE 2).
+   * - undefined → dev default: `*` (API pública sin credenciales).
+   * - lista → producción: solo esos orígenes; cualquier otro origen recibe
+   *   preflight 204 sin `Access-Control-Allow-Origin` (el navegador bloquea)
+   *   o 403 en peticiones reales. Peticiones sin header `Origin` (curl,
+   *   server-to-server) no se ven afectadas.
+   */
+  corsOrigins?: string[]
+  /**
+   * Si es true, la IP se toma de `X-Forwarded-For` (solo seguro detrás de un
+   * proxy de confianza que sobrescribe esa cabecera). Si es false (default),
+   * la cabecera NO se confía: se usa la dirección del socket — evita que un
+   * atacante falsifique `X-Forwarded-For` para saltarse el rate limit.
+   */
+  trustProxy?: boolean
 }
 
-export function createApp({ provider, minScore, topK, rateLimit }: AppDeps) {
+export function createApp({
+  provider,
+  minScore,
+  topK,
+  rateLimit,
+  corsOrigins,
+  trustProxy,
+}: AppDeps) {
   const limiter = rateLimit !== undefined ? createRateLimiter(rateLimit) : undefined
   const app = new Hono()
 
-  // CORS (ADR-005: "pendiente hasta que exista UI del asistente" — F5).
-  // apps/docs consume /api/ask desde otro origen (dev 5173 → 3001, e2e
-  // 6007 → 3001, producción en el dominio público de docs). API pública sin
-  // credenciales ni cookies: se permite cualquier origen, sin `credentials`.
+  // CORS (V1 FINAL, FASE 2). apps/docs consume /api/ask desde otro origen
+  // (dev 5173 → 3001, e2e 6007 → 3001, producción en el dominio público de
+  // docs). API pública sin credenciales ni cookies.
   app.use('*', async (c, next) => {
-    c.header('Access-Control-Allow-Origin', '*')
+    const origin = c.req.header('origin')
+    if (corsOrigins !== undefined && origin !== undefined) {
+      // Producción: lista cerrada de orígenes.
+      if (!corsOrigins.includes(origin)) {
+        if (c.req.method === 'OPTIONS') return c.body(null, 204)
+        return c.json(
+          {
+            error: {
+              code: 'origin_not_allowed',
+              message: 'Origin not allowed.',
+              requestId: randomUUID(),
+            },
+          },
+          403,
+        )
+      }
+      c.header('Access-Control-Allow-Origin', origin)
+      c.header('Vary', 'Origin')
+    } else if (corsOrigins === undefined) {
+      // Dev default: cualquier origen, sin credenciales.
+      c.header('Access-Control-Allow-Origin', '*')
+    }
     c.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
     c.header('Access-Control-Allow-Headers', 'Content-Type')
     c.header('Access-Control-Max-Age', '86400')
@@ -75,9 +118,9 @@ export function createApp({ provider, minScore, topK, rateLimit }: AppDeps) {
       const requestId = randomUUID()
 
       //    a) Rate limit por IP antes de parsear (health queda exento: es
-      //       barato y lo consume la UI del asistente).
-      const forwarded = c.req.header('x-forwarded-for')
-      const ip = forwarded?.split(',')[0]?.trim() ?? 'unknown'
+      //       barato y lo consume la UI del asistente). La IP solo se toma de
+      //       X-Forwarded-For si TRUST_PROXY está activo (ver clientIp).
+      const ip = clientIp(c, trustProxy ?? false)
       if (limiter !== undefined) {
         const result = limiter.check(ip)
         if (!result.allowed) {
@@ -167,6 +210,26 @@ export function createApp({ provider, minScore, topK, rateLimit }: AppDeps) {
  * internal error. Internal details (stack traces, request/response bodies,
  * API keys, repository paths) are never included in the response.
  */
+/**
+ * IP del cliente (V1 FINAL, FASE 3).
+ *
+ * - trustProxy=true → primer valor de `X-Forwarded-For` (solo detrás de un
+ *   proxy de confianza que sobrescribe la cabecera; p. ej. Vercel/Fly).
+ * - trustProxy=false (default) → dirección del socket. Un atacante que envía
+ *   `X-Forwarded-For` a pelo NO consigue crear contadores distintos: todas
+ *   sus peticiones comparten la misma clave.
+ */
+function clientIp(c: Context, trustProxy: boolean): string {
+  if (trustProxy) {
+    const forwarded = c.req.header('x-forwarded-for')
+    if (forwarded !== undefined) {
+      return forwarded.split(',')[0]?.trim() ?? 'unknown'
+    }
+  }
+  const incoming = (c.env as { incoming?: { socket?: { remoteAddress?: string } } })?.incoming
+  return incoming?.socket?.remoteAddress ?? 'unknown'
+}
+
 function mapError(c: Context, error: unknown, requestId: string) {
   if (error instanceof AIProviderError) {
     const code = providerErrorCode(error)

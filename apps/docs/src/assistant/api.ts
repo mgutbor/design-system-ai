@@ -11,9 +11,16 @@
  * por HTTP, nunca importa ai-core/knowledge.
  */
 
-/** Origen configurable en build (VITE_API_BASE_URL); default dev local. */
+/**
+ * Origen de apps/api, configurable en build con VITE_API_BASE_URL.
+ * - Sin variable y en producción → mismo origen (''): el bundle NUNCA
+ *   contiene localhost; si apps/docs se sirve tras un proxy que enruta
+ *   /api hacia apps/api, el asistente funciona sin más configuración.
+ * - Sin variable y en desarrollo → localhost:3001 (servidor local).
+ */
 const API_BASE_URL =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:3001'
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  (import.meta.env.PROD ? '' : 'http://localhost:3001')
 
 /** Una fuente recuperada: componente + score del gate (retrieval real). */
 export interface AskSource {

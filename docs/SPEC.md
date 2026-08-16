@@ -248,7 +248,7 @@ cada una endureció con tests la fase que le precede.
 **Implementado (F5):**
 
 - **UI del asistente** en `apps/docs` (`/assistant`): entrada de pregunta + respuesta + badge grounded + panel de fuentes exclusivamente desde `AIAnswer.retrieval.components` + refusal + errores amigables.
-- **Consumo de `apps/api` por HTTP** desde la UI (`VITE_API_BASE_URL` en build, default `http://localhost:3001`) + **CORS** en apps/api (origen `*`, sin credenciales — API pública de docs).
+- **Consumo de `apps/api` por HTTP** desde la UI (`VITE_API_BASE_URL` en build; sin ella, prod usa mismo origen y dev `http://localhost:3001`) + **CORS** en apps/api: `*` en desarrollo; en producción solo los orígenes de `CORS_ORIGIN` (preflight ajeno bloqueado, petición ajena 403) + **rate limiting** por IP en memoria (`RATE_LIMIT_MAX`/`RATE_LIMIT_WINDOW_MS`, `429` + `Retry-After`) + límite de body 64 KB (`413`).
 - **Tests**: 12 unitarios (RTL + axe) y 4 E2E contra la API real con MockProvider (offline, sin API key).
 
 **Validado con llamada REAL (2026-08-16):**

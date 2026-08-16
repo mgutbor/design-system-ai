@@ -249,6 +249,9 @@ describe('Rate limiting y límite de body (V1-0, P0-2)', () => {
     const app = createApp({
       provider: new MockProvider(),
       rateLimit: { max: 2, windowMs: 60_000 },
+      // El test usa X-Forwarded-For: se activa trustProxy (como en producción
+      // detrás de un proxy de confianza).
+      trustProxy: true,
     })
     const ok1 = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
     const ok2 = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
@@ -266,6 +269,7 @@ describe('Rate limiting y límite de body (V1-0, P0-2)', () => {
     const app = createApp({
       provider: new MockProvider(),
       rateLimit: { max: 1, windowMs: 60_000 },
+      trustProxy: true,
     })
     const first = await app.request(`${BASE}/api/ask`, {
       method: 'POST',
@@ -279,6 +283,28 @@ describe('Rate limiting y límite de body (V1-0, P0-2)', () => {
     })
     expect(first.status).toBe(200)
     expect(second.status).toBe(200)
+  })
+
+  it('f. sin TRUST_PROXY, X-Forwarded-For falsificado NO crea contadores distintos (anti-spoofing)', async () => {
+    const app = createApp({
+      provider: new MockProvider(),
+      rateLimit: { max: 1, windowMs: 60_000 },
+      // trustProxy false (default): la cabecera no se confía.
+    })
+    const spoof1 = await app.request(`${BASE}/api/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': '6.6.6.6' },
+      body: JSON.stringify({ question: '¿Cómo uso Button?' }),
+    })
+    const spoof2 = await app.request(`${BASE}/api/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': '7.7.7.7' },
+      body: JSON.stringify({ question: '¿Cómo uso Button?' }),
+    })
+    // Ambas peticiones comparten la clave (misma dirección de socket / 'unknown'):
+    // la segunda ya está bloqueada — el atacante no puede rotar IPs falsas.
+    expect(spoof1.status).toBe(200)
+    expect(spoof2.status).toBe(429)
   })
 
   it('c. health NO se rate-limita (la UI lo consulta al cargar)', async () => {
@@ -326,6 +352,65 @@ describe('CORS (F5: docs UI consumes /api/ask cross-origin)', () => {
     const res = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
     expect(res.status).toBe(200)
     expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*')
+  })
+})
+
+describe('CORS restringido en producción (V1 FINAL, FASE 2)', () => {
+  const docsOrigin = 'https://docs.example.com'
+  const evilOrigin = 'https://evil.example'
+
+  it('preflight desde origen permitido → 204 con ACAO = origen + Vary: Origin', async () => {
+    const app = createApp({ provider: new MockProvider(), corsOrigins: [docsOrigin] })
+    const res = await app.request(`${BASE}/api/ask`, {
+      method: 'OPTIONS',
+      headers: { Origin: docsOrigin },
+    })
+    expect(res.status).toBe(204)
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe(docsOrigin)
+    expect(res.headers.get('Vary')).toContain('Origin')
+  })
+
+  it('preflight desde origen NO permitido → 204 SIN ACAO (el navegador bloquea)', async () => {
+    const app = createApp({ provider: new MockProvider(), corsOrigins: [docsOrigin] })
+    const res = await app.request(`${BASE}/api/ask`, {
+      method: 'OPTIONS',
+      headers: { Origin: evilOrigin },
+    })
+    expect(res.status).toBe(204)
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBeNull()
+  })
+
+  it('petición real desde origen permitido → 200 con ACAO = origen', async () => {
+    const app = createApp({ provider: new MockProvider(), corsOrigins: [docsOrigin] })
+    const res = await app.request(`${BASE}/api/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: docsOrigin },
+      body: JSON.stringify({ question: '¿Cómo uso Button?' }),
+    })
+    expect(res.status).toBe(200)
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe(docsOrigin)
+  })
+
+  it('petición real desde origen NO permitido → 403 sin exponer internals', async () => {
+    const app = createApp({ provider: new MockProvider(), corsOrigins: [docsOrigin] })
+    const res = await app.request(`${BASE}/api/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: evilOrigin },
+      body: JSON.stringify({ question: '¿Cómo uso Button?' }),
+    })
+    expect(res.status).toBe(403)
+    const data = (await res.json()) as { error: { code: string; message: string } }
+    expect(data.error.code).toBe('origin_not_allowed')
+    expect(data.error.message).toBe('Origin not allowed.')
+    // Sin internals: ni claves, ni configuración, ni proveedor.
+    expect(JSON.stringify(data)).not.toContain('NVIDIA')
+    expect(JSON.stringify(data)).not.toContain('api_key')
+  })
+
+  it('petición sin Origin (curl/server-to-server) → 200 sin exigir CORS', async () => {
+    const app = createApp({ provider: new MockProvider(), corsOrigins: [docsOrigin] })
+    const res = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
+    expect(res.status).toBe(200)
   })
 })
 

@@ -92,13 +92,18 @@ respuesta, headers ni API keys.
 - Errores del provider mapeados por el código estable de la causa
   (`NvidiaProviderError.code`), recorriendo la cadena de causas; el detalle
   interno nunca se serializa.
-- **CORS (F5)**: la UI del asistente en `apps/docs` consume la API desde otro
-  origen (dev `5173 → 3001`, e2e `6007 → 3001`). CORS configurado con
-  `Access-Control-Allow-Origin: *` (API pública de documentación, sin
-  credenciales ni cookies), métodos `GET, POST, OPTIONS` y preflight OPTIONS
-  → 204. No se expone información interna.
-- No hay rate limiting, autenticación de usuario ni cuotas (diferidos;
-  decisión pendiente).
+- **CORS (F5, V1 FINAL)**: la UI del asistente en `apps/docs` consume la API
+  desde otro origen (dev `5173 → 3001`, e2e `6007 → 3001`). Sin
+  `CORS_ORIGIN` (dev) → `Access-Control-Allow-Origin: *`; en producción solo
+  los orígenes de `CORS_ORIGIN` reciben la cabecera (reflejada + `Vary:
+Origin`), preflight ajeno → 204 sin cabecera, petición ajena → 403. Métodos
+  `GET, POST, OPTIONS`; sin credenciales ni cookies; no se expone información
+  interna.
+- **Rate limiting (V1-0, V1 FINAL)**: fixed window en memoria por IP
+  (`RATE_LIMIT_MAX`/`RATE_LIMIT_WINDOW_MS`), `429` + `Retry-After`, exento en
+  `/api/health`; IP desde socket salvo `TRUST_PROXY=1` (anti-spoofing).
+  Limitación documentada: por instancia, asume una sola instancia en v1.
+- Autenticación de usuario y cuotas: diferidos (decisión pendiente, post-v1).
 
 ## Consumo desde apps/docs (F5)
 

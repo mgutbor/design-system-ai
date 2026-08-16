@@ -2,18 +2,19 @@ name: Release
 
 # Workflow de release basado en Changesets (F6). Independiente del CI normal:
 # - El CI (ci.yml) valida el código en cada push/PR sin publicar nada.
-# - Este workflow se ejecuta SOLO en push a main:
+# - Este workflow se ejecuta SOLO MANUALMENTE (workflow_dispatch): un push a
+#   main NUNCA dispara una publicación. El primer release es manual y
+#   controlado; la automatización de releases futuros se decide después.
 #   1. Si hay changesets pendientes → crea/actualiza el PR "Version Packages"
 #      (changesets/action con `version`).
-#   2. Al fusionar (o si no hay changesets pendientes) → publica los paquetes
-#      versionados en npm (`publish`).
+#   2. Si no hay changesets pendientes → publica las versiones actuales en
+#      npm (`publish`), p. ej. el primer release de 0.1.0.
 #
 # Requiere un secreto de GitHub: NPM_TOKEN (token de npm con permiso de
 # publicación). Ningún secreto se almacena en el repositorio.
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 

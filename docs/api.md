@@ -124,7 +124,7 @@ Variables (ver `.env.example`):
 | `NVIDIA_API_KEY`    | solo nvidia | —                                     | API key (solo server)                                                      |
 | `NVIDIA_MODEL`      | solo nvidia | —                                     | model string (sin default; validado: `deepseek-ai/deepseek-v4-flash-0731`) |
 | `NVIDIA_BASE_URL`   | no          | `https://integrate.api.nvidia.com/v1` | endpoint OpenAI-compatible de NVIDIA Build                                 |
-| `NVIDIA_TIMEOUT_MS` | no          | `30000`                               | timeout de petición                                                        |
+| `NVIDIA_TIMEOUT_MS` | no          | `60000`                               | timeout de petición (latencia real 8.5–25.3 s)                             |
 
 Si `AI_PROVIDER=nvidia` y falta `NVIDIA_API_KEY` o `NVIDIA_MODEL`, el
 provider falla en la construcción (fail-fast determinista).
@@ -134,7 +134,7 @@ provider falla en la construcción (fail-fast determinista).
 > (HTTP 410 Gone); el ID vigente y validado es
 > `deepseek-ai/deepseek-v4-flash-0731`. Latencia observada por respuesta
 > grounded: **8.5–25.3 s** (variable). Si recibes 503 por timeout del
-> provider, sube `NVIDIA_TIMEOUT_MS` (default 30000).
+> provider, sube `NVIDIA_TIMEOUT_MS` (default 60000).
 
 ## Ejecución local
 

@@ -4,7 +4,7 @@ Un design system open source con documentación viva y un AI Assistant que respo
 
 Proyecto de portfolio de arquitectura frontend: monorepo pnpm + Turborepo, design tokens framework-agnósticos, componentes React accesibles (WCAG 2.2 AA), testing (Vitest + RTL + Playwright), Storybook, CI/CD con GitHub Actions y una capa de IA desacoplada del proveedor (NVIDIA Build — gratuito y OpenAI-compatible —, modelo configurable, MockProvider para tests, retrieval determinista).
 
-> **Estado real (reconciliado)**: F0–F4 completas (infraestructura, tokens, 8 componentes con DoD, apps/docs, apps/playground) · F5 funcional con MockProvider (knowledge + AI Core + Mock/NVIDIA + apps/api + **UI del asistente** en `/assistant`; solo quedan decisiones: credenciales NVIDIA (`NVIDIA_API_KEY`), rate limiting, formato eval) · F6 ≈30% (pendiente: Changesets, release, a11y manual). F5.1/F6.1/F7.1 fueron auditorías de hardening, no fases funcionales. Detalle en [docs/SPEC.md §11](docs/SPEC.md).
+> **Estado real**: F0–F5 **completas y validadas** (infraestructura, tokens, 8 componentes con DoD, apps/docs, apps/playground, knowledge + AI Core + Mock/NVIDIA + apps/api + **UI del asistente** en `/assistant`; proveedor real NVIDIA Build **validado con llamada real** — modelo `deepseek-ai/deepseek-v4-flash-0731`). F6 **en curso → release candidate**: build de publicación listo, Changesets + release workflow preparados, a11y auditada, Lighthouse ≥95, E2E verdes. F5.1/F6.1/F7.1 fueron auditorías de hardening, no fases funcionales. Detalle en [docs/SPEC.md §11](docs/SPEC.md) y [docs/release.md](docs/release.md).
 
 ## Documentación
 

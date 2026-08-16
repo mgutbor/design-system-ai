@@ -47,6 +47,28 @@ test('assistant: consulta sin contexto → refusal, sin fuentes', async ({ page 
   await expect(page.getByText('minScore threshold: 20')).not.toBeVisible()
 })
 
+test('assistant: error HTTP de la API → mensaje amigable', async ({ page }) => {
+  // Simula un 500 del backend: la UI debe mostrar el error amigable
+  // (ERROR_LABELS.internal), nunca un stack trace ni internals.
+  await page.route('**/api/ask', (route) =>
+    route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: { code: 'internal', message: 'Internal server error.' } }),
+    }),
+  )
+  await page.goto(`${DOCS}/assistant`)
+  await page.getByLabel('Your question').fill('How do I use Button?')
+  await page.getByRole('button', { name: 'Ask' }).click()
+
+  await expect(page.getByLabel('Assistant error')).toBeVisible()
+  await expect(page.getByText('Algo salió mal en el servidor. Vuelve a intentarlo.')).toBeVisible()
+  // No se muestra una respuesta grounded (no hay respuesta).
+  await expect(page.getByText(/Grounded/)).not.toBeVisible()
+  // El error no expone detalles internos del backend.
+  await expect(page.getByText(/Internal server error/)).not.toBeVisible()
+})
+
 test('assistant: axe sin violaciones críticas en la página', async ({ page }) => {
   await page.goto(`${DOCS}/assistant`)
   const results = await new AxeBuilder({ page }).analyze()

@@ -222,7 +222,7 @@ referencias — todo eso es de AI Core/knowledge.
   el ID sin sufijo devuelve HTTP 410 Gone)
 - `NVIDIA_BASE_URL` (default `https://integrate.api.nvidia.com/v1` — el
   endpoint OpenAI-compatible de NVIDIA Build)
-- `NVIDIA_TIMEOUT_MS` (default 30000, SPEC §7 timeout 30s)
+- `NVIDIA_TIMEOUT_MS` (default 60000 — latencia real observada 8.5–25.3 s, SPEC §7 timeout 60s)
 
 **Errores** (`NvidiaProviderError` con `code` estable): `auth` (401/403),
 `rate_limit` (429), `unavailable` (5xx/otros 4xx), `invalid_response` (JSON

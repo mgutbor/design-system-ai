@@ -213,18 +213,18 @@ Estado verificado contra la implementación (2026-08). F5.1, F6.1 y F7.1 son
 **hardening/auditorías transversales** (no fases funcionales independientes);
 cada una endureció con tests la fase que le precede.
 
-| Fase   | Contenido                                                                                                         | Estado real                   | Done cuando                                                            |
-| ------ | ----------------------------------------------------------------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------- |
-| **F0** | Infra + tokens (79 primitivos · 18 semánticos · 0 component) + ADR-001..009 + README                              | ✅ 100%                       | CI verde; tokens validados; Storybook con toggle de tema               |
-| **F1** | Button, Input, FormField (DoD completo)                                                                           | ✅ 100%                       | 3 componentes con DoD                                                  |
-| **F2** | Checkbox, Select (combobox auditado)                                                                              | ✅ 100%                       | DoD; combobox auditado                                                 |
-| **F3** | Modal, Badge, Spinner + metadata madura (8 JSON + index)                                                          | ✅ 100%                       | 8 componentes                                                          |
-| **F4** | `apps/docs` + `apps/playground` (copy-code, theme, gaps.md)                                                       | ✅ 100%                       | Playground funcional; Lighthouse ≥95 como **objetivo** (no medido aún) |
-| **F5** | `knowledge` + eval + tuning · `ai-core` · `ai-providers` (Mock + NVIDIA) · `apps/api` · UI del asistente          | 🟢 funcional con MockProvider | Ver "Pendiente para cerrar F5" abajo (solo decisiones)                 |
-| **F6** | E2E completo + a11y manual + polish + release (Changesets, publicar tokens/react)                                 | 🔴 ≈30%                       | Ver "Pendiente para cerrar F6" abajo                                   |
-| F5.1   | Hardening knowledge/retrieval: dataset 57 consultas, whitelist de props propias, robustez, integridad de examples | ✅ (transversal)              | —                                                                      |
-| F6.1   | Hardening AI Core: gate 20 (escala absoluta), confidence, anti-hallucination programático, invariantes            | ✅ (transversal)              | —                                                                      |
-| F7.1   | Hardening API + NvidiaProvider: matriz de entradas, secretos, provider A–Q, prompt injection, concurrencia        | ✅ (transversal)              | —                                                                      |
+| Fase   | Contenido                                                                                                         | Estado real                           | Done cuando                                                                       |
+| ------ | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------- | --------------------------------------------------------------------------------- |
+| **F0** | Infra + tokens (79 primitivos · 18 semánticos · 0 component) + ADR-001..009 + README                              | ✅ 100%                               | CI verde; tokens validados; Storybook con toggle de tema                          |
+| **F1** | Button, Input, FormField (DoD completo)                                                                           | ✅ 100%                               | 3 componentes con DoD                                                             |
+| **F2** | Checkbox, Select (combobox auditado)                                                                              | ✅ 100%                               | DoD; combobox auditado                                                            |
+| **F3** | Modal, Badge, Spinner + metadata madura (8 JSON + index)                                                          | ✅ 100%                               | 8 componentes                                                                     |
+| **F4** | `apps/docs` + `apps/playground` (copy-code, theme, gaps.md)                                                       | ✅ 100%                               | Playground funcional; Lighthouse ≥95 como **objetivo** (ver F6)                   |
+| **F5** | `knowledge` + eval + tuning · `ai-core` · `ai-providers` (Mock + NVIDIA) · `apps/api` · UI del asistente          | ✅ 100% (validada con llamada real)   | Ver abajo: decisiones resueltas en F6 (timeout) y diferidas (rate limiting, eval) |
+| **F6** | Release & Quality: build de publicación, Changesets, release workflow, a11y manual, Lighthouse, polish            | 🟡 release candidate (falta publicar) | Ver "Release candidate (F6)" abajo                                                |
+| F5.1   | Hardening knowledge/retrieval: dataset 57 consultas, whitelist de props propias, robustez, integridad de examples | ✅ (transversal)                      | —                                                                                 |
+| F6.1   | Hardening AI Core: gate 20 (escala absoluta), confidence, anti-hallucination programático, invariantes            | ✅ (transversal)                      | —                                                                                 |
+| F7.1   | Hardening API + NvidiaProvider: matriz de entradas, secretos, provider A–Q, prompt injection, concurrencia        | ✅ (transversal)                      | —                                                                                 |
 
 ### Pendiente para cerrar F5
 
@@ -242,15 +242,27 @@ cada una endureció con tests la fase que le precede.
 
 1. **Decidir rate limiting** (la SPEC original lo incluía; hoy diferido — decisión pendiente).
 2. **Alinear la eval suite con la SPEC** (`evaluations/questions.json` + hit@5 + paso de CI) o validar el formato TS actual como definitivo.
-3. **Timeout de producción**: latencia real observada 8.5–25.3 s por respuesta grounded; decidir si subir el default `NVIDIA_TIMEOUT_MS` (30000) — hoy es configurable sin tocar código.
+3. ~~Timeout de producción~~ → **resuelto en F6**: default `NVIDIA_TIMEOUT_MS` subido a **60000** (latencia real observada 8.5–25.3 s; 30 s dejaba margen insuficiente). Sigue siendo configurable por entorno.
 
-### Pendiente para cerrar F6
+### Release candidate (F6) — estado 2026-08-16
 
-1. **Changesets** (inicializar `.changeset/`, config, primer changeset).
-2. **Publicación** de `@ods-ai/tokens` y `@ods-ai/react` (quitar `private`, versión ≥0.1.0, release workflow).
-3. **Auditoría a11y manual** documentada por componente (WCAG 2.2 AA).
-4. **E2E completo del flujo del asistente** (depende de cerrar F5).
-5. **Polish/release**: changelog, release notes, README final.
+**Implementado en F6:**
+
+1. **Build de publicación**: `@ods-ai/react` compila a dist (tsc + d.ts + CSS modules copiados) sin dependencias nuevas; `@ods-ai/tokens` genera dist ya validado. Tarballs inspeccionados (`npm pack --dry-run`): solo dist + package.json, sin tests/stories/docs/coverage/secretos.
+2. **Versiones/metadata**: `@ods-ai/tokens` y `@ods-ai/react` en **0.1.0**, `private: false`, `license: MIT`, `publishConfig.access: public`; paquetes internos (knowledge/ai-core/ai-providers/api) siguen privados.
+3. **Changesets**: configurado (`.changeset/config.json`, acceso público, ignore de paquetes internos); primer changeset consumido → CHANGELOG.md de 0.1.0 generado.
+4. **Release workflow**: `.github/workflows/release.yml` (changesets/action — versiona vía PR y publica desde main; requiere secreto `NPM_TOKEN`; CI normal sigue offline).
+5. **a11y manual**: [docs/a11y-audit.md](a11y-audit.md) — 8 componentes, 0 FAIL, SR real NO VERIFICABLE.
+6. **Lighthouse**: docs en producción → **performance 99 · accessibility 100 · best-practices 100 · seo 100** (≥95 cumplido; ver [docs/release.md](release.md)).
+7. **E2E asistente**: grounded + Sources + confidence + refusal + **error HTTP** + axe (5 tests).
+8. **Timeout NVIDIA**: default `NVIDIA_TIMEOUT_MS` → **60000** (latencia real 8.5–25.3 s).
+
+**Pendiente para publicar (requiere tu acción):**
+
+1. **Publicar** `@ods-ai/tokens` y `@ods-ai/react` (npm publish desde el release workflow; requiere `NPM_TOKEN` como GitHub Secret y el repo en GitHub).
+2. **`repository`/`homepage`** en los package.json cuando exista la URL del repo en GitHub (no se inventa).
+3. Rate limiting (diferido a deployment, como decisión abierta).
+4. Formato eval suite: se valida el formato TS actual como definitivo (SPEC §7b ya lo documenta).
 
 ### Opcionales / diferidos (no bloqueantes)
 

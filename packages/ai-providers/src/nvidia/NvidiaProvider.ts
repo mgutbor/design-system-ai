@@ -25,7 +25,7 @@ import type { AIProvider, AIResponse, ChatMessage, ChatOptions, TokenUsage } fro
  *   catalog; changeable by configuration without touching ai-core)
  * - NVIDIA_BASE_URL  (optional, default: https://integrate.api.nvidia.com/v1 —
  *   the NVIDIA Build OpenAI-compatible endpoint; model is configurable)
- * - NVIDIA_TIMEOUT_MS (optional, default: 30000)
+ * - NVIDIA_TIMEOUT_MS (optional, default: 60000)
  *
  * Errors are typed (`NvidiaProviderError` with a stable `code`) so the HTTP
  * layer can map them to status codes. The public error never contains the API
@@ -91,7 +91,7 @@ export class NvidiaProvider implements AIProvider {
     this.apiKey = apiKey
     this.model = model
     this.baseUrl = baseUrl.replace(/\/+$/, '')
-    this.timeoutMs = options.timeoutMs ?? 30_000
+    this.timeoutMs = options.timeoutMs ?? 60_000
     this.fetchImpl = options.fetch ?? globalThis.fetch
   }
 

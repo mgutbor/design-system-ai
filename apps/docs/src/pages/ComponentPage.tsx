@@ -45,10 +45,39 @@ export default function ComponentPage() {
         <code>/components/{entry.component}</code>
       </p>
 
+      {entry.whenToUse !== undefined && entry.whenToUse.length > 0 ? (
+        <section aria-labelledby="when-to-use-heading">
+          <h2 id="when-to-use-heading">Cuándo usar</h2>
+          <ul className={styles.whenList}>
+            {entry.whenToUse.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {entry.whenNotToUse !== undefined && entry.whenNotToUse.length > 0 ? (
+        <section aria-labelledby="when-not-to-use-heading">
+          <h2 id="when-not-to-use-heading">Cuándo NO usar</h2>
+          <ul className={styles.whenList}>
+            {entry.whenNotToUse.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       {entry.variants.length > 0 ? (
         <section aria-labelledby="variants-heading">
           <h2 id="variants-heading">Variantes</h2>
           <p>{entry.variants.join(' · ')}</p>
+        </section>
+      ) : null}
+
+      {entry.behavior !== undefined ? (
+        <section aria-labelledby="behavior-heading">
+          <h2 id="behavior-heading">Comportamiento</h2>
+          <p>{entry.behavior}</p>
         </section>
       ) : null}
 

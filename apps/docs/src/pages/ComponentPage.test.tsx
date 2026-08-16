@@ -67,6 +67,23 @@ describe('ComponentPage — API pública (P0)', () => {
     expect(screen.getByRole('heading', { name: 'Componente no encontrado' })).toBeInTheDocument()
   })
 
+  it('5. Button muestra la guía de decisión (Cuándo usar / Cuándo NO usar)', () => {
+    renderAt('/components/button')
+    expect(screen.getByRole('heading', { name: 'Cuándo usar' })).toBeInTheDocument()
+    expect(screen.getByText('Ejecutar una acción (guardar, enviar, eliminar).')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Cuándo NO usar' })).toBeInTheDocument()
+    expect(screen.getByText(/Para navegar/)).toBeInTheDocument()
+  })
+
+  it('6. FormField muestra Comportamiento (cableado ARIA real)', () => {
+    renderAt('/components/form-field')
+    expect(screen.getByRole('heading', { name: 'Comportamiento' })).toBeInTheDocument()
+    // Acotado a la sección: aria-describedby también aparece en la tabla de
+    // atributos heredados, pero aquí verificamos el cableado real descrito.
+    const section = screen.getByRole('region', { name: 'Comportamiento' })
+    expect(within(section).getByText(/aria-describedby/)).toBeInTheDocument()
+  })
+
   it('4. FormField documenta solo sus props propias (label, htmlFor, description, error, children)', () => {
     renderAt('/components/form-field')
     const api = screen.getAllByRole('table')[0]!

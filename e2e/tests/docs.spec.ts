@@ -15,6 +15,11 @@ test('docs: navigation, canonical example copy and theme toggle', async ({ page 
   // El código mostrado procede de los ejemplos canónicos (single source).
   await expect(page.getByText('<Button>Save changes</Button>').first()).toBeVisible()
 
+  // V1-0 (P1-1): la ficha guía la decisión de cuándo usar / cuándo NO usar.
+  await expect(page.getByRole('heading', { name: 'Cuándo usar' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Cuándo NO usar' })).toBeVisible()
+  await expect(page.getByText('Para navegar: usa un enlace').first()).toBeVisible()
+
   // Copy-code: copia exactamente el ejemplo canónico.
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.getByRole('button', { name: 'Copiar código' }).first().click()

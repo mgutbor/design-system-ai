@@ -24,6 +24,12 @@ const COMPONENT_DESCRIPTORS: Record<
     a11ySummary: string
     variants?: string[]
     sizes?: string[]
+    /** Guía de decisión: cuándo usar el componente (V1-0). */
+    whenToUse?: string[]
+    /** Guía de decisión: cuándo NO usar el componente (V1-0). */
+    whenNotToUse?: string[]
+    /** Comportamiento relevante no evidente desde la API. */
+    behavior?: string
   }
 > = {
   button: {
@@ -34,6 +40,17 @@ const COMPONENT_DESCRIPTORS: Record<
       'Semántica nativa de <button>; foco visible con anillo; loading usa aria-busy y deshabilita la interacción.',
     variants: ['primary', 'secondary', 'ghost', 'destructive'],
     sizes: ['sm', 'md', 'lg'],
+    whenToUse: [
+      'Ejecutar una acción (guardar, enviar, eliminar).',
+      'primary: la acción principal de la vista (una por vista, idealmente).',
+      'secondary: acciones alternativas junto a una primaria.',
+      'ghost: acciones de baja prominencia (tablas, listas).',
+      'destructive: acciones destructivas o irreversibles, siempre con confirmación previa.',
+    ],
+    whenNotToUse: [
+      'Para navegar: usa un enlace (el DS no expone un Button polimórfico en v1 — ADR-007).',
+      'Para elegir una opción dentro de un formulario: usa Select.',
+    ],
   },
   input: {
     description:
@@ -41,6 +58,17 @@ const COMPONENT_DESCRIPTORS: Record<
     tags: ['input', 'text', 'form', 'field'],
     a11ySummary:
       'Semántica nativa de <input>; invalid marca aria-invalid y el estado visual de error.',
+    whenToUse: [
+      'Entrada de texto libre de una línea (texto, email, contraseña…).',
+      'Junto a FormField cuando necesite label, descripción o error accesibles.',
+    ],
+    whenNotToUse: [
+      'Elegir una opción de una lista: usa Select.',
+      'Sí/no o varias opciones independientes: usa Checkbox.',
+      'Texto de varias líneas: usa un <textarea> nativo (fuera del DS v1).',
+    ],
+    behavior:
+      'Solo gestiona su propio estado y apariencia; la asociación accesible (label, description, error) la resuelve FormField. Estados: focus (anillo), disabled, readOnly e invalid (aria-invalid + borde danger).',
   },
   'form-field': {
     description:
@@ -48,6 +76,15 @@ const COMPONENT_DESCRIPTORS: Record<
     tags: ['form', 'label', 'field', 'validation'],
     a11ySummary:
       'Asocia label y control con htmlFor; description y error vía aria-describedby; el error usa role=alert.',
+    whenToUse: [
+      'Cualquier control del DS que necesite label, descripción o mensaje de error accesibles (Input, Select, Checkbox…).',
+    ],
+    whenNotToUse: [
+      'Controles sin label visible (p. ej. iconos con aria-label).',
+      'Solo maquetación: no aporta estructura visual por sí mismo.',
+    ],
+    behavior:
+      'Genera un id estable (useId) y cablea htmlFor + aria-describedby entre label, control, description y error. El error reemplaza la description, se anuncia con role="alert" y activa invalid en el control. Contrato FormFieldControlProps: inyecta exactamente id, aria-describedby e invalid — cualquier control que los declare es compatible sin modificar FormField.',
   },
   checkbox: {
     description:
@@ -55,6 +92,14 @@ const COMPONENT_DESCRIPTORS: Record<
     tags: ['checkbox', 'form', 'toggle', 'selection'],
     a11ySummary:
       'Checkbox nativo: teclado (Space), estados checked/disabled y rol checkbox nativos; invalid marca aria-invalid y el estado visual de error.',
+    whenToUse: [
+      'Confirmar sí/no (aceptar términos, activar una opción).',
+      'Seleccionar varias opciones independientes de un grupo.',
+      'Junto a FormField para label, descripción y error accesibles.',
+    ],
+    whenNotToUse: ['Elegir una única opción de varias: usa Select.', 'Texto libre: usa Input.'],
+    behavior:
+      'Input nativo type="checkbox" (no sobreescribible): teclado con Space, estados checked/disabled/required e invalid (aria-invalid + anillo danger).',
   },
   select: {
     description:
@@ -62,6 +107,18 @@ const COMPONENT_DESCRIPTORS: Record<
     tags: ['select', 'form', 'dropdown', 'selection'],
     a11ySummary:
       'Select nativo: patrón de selección única con navegación por teclado, popup y roles combobox/listbox nativos; invalid marca aria-invalid.',
+    whenToUse: [
+      'Elegir una única opción de una lista conocida — el select nativo es el patrón accesible correcto.',
+      'Listas largas o con type-ahead (nativo).',
+      'Junto a FormField para label, descripción y error accesibles.',
+    ],
+    whenNotToUse: [
+      'Entrada de texto libre: usa Input.',
+      'Sí/no o varias opciones independientes: usa Checkbox.',
+      'Selección múltiple (multiple): fuera del alcance v1 (patrón distinto).',
+    ],
+    behavior:
+      'Select nativo: teclado (flechas, type-ahead), popup y roles combobox/listbox nativos; no reimplementa un dropdown custom. Estados focus, disabled e invalid. La flecha nativa se mantiene en v1.',
   },
   modal: {
     description:
@@ -69,6 +126,17 @@ const COMPONENT_DESCRIPTORS: Record<
     tags: ['modal', 'dialog', 'overlay', 'focus'],
     a11ySummary:
       'Dialog nativo con showModal: focus trap, fondo inerte y Escape nativos; restore de foco y aria-labelledby/describedby gestionados por el componente.',
+    whenToUse: [
+      'Tareas que requieren atención focalizada y bloqueante (confirmaciones, formularios cortos).',
+      'Información crítica que el usuario debe ver antes de continuar.',
+    ],
+    whenNotToUse: [
+      'Errores o feedback rápido: mantén la información en la página.',
+      'Contenido largo de lectura: mejor una página o sección.',
+      'Navegación principal: nunca uses un modal como estructura de navegación.',
+    ],
+    behavior:
+      'Dialog nativo con showModal(): top layer, backdrop, focus trap, fondo inerte y cierre con Escape nativos; restore de foco al cerrar y aria-labelledby/describedby gestionados por el componente. El panel hace scroll interno con contenido largo. No hay API pública de focus management.',
   },
   badge: {
     description:
@@ -76,6 +144,15 @@ const COMPONENT_DESCRIPTORS: Record<
     tags: ['badge', 'status', 'label'],
     a11ySummary:
       'El significado lo transmite el texto (nunca solo color); contraste AA verificado en light y dark.',
+    whenToUse: [
+      'Etiqueta corta de estado (neutral, success, warning, danger) cuyo significado transmite el texto.',
+      'Complementar un estado ya comunicado por el texto circundante.',
+    ],
+    whenNotToUse: [
+      'Acciones: usa Button.',
+      'Comunicar un estado solo con color: el texto es obligatorio (WCAG 1.4.1).',
+      'Contenido largo: los labels deben ser cortos.',
+    ],
   },
   spinner: {
     description:
@@ -83,6 +160,16 @@ const COMPONENT_DESCRIPTORS: Record<
     tags: ['spinner', 'loading', 'progress'],
     a11ySummary:
       'Por defecto aria-hidden y sin anuncio; con label pasa a role=status. Respeta prefers-reduced-motion.',
+    whenToUse: [
+      'Carga sin texto circundante que la comunique: pasa un label (role="status").',
+      'Carga decorativa dentro de un control (p. ej. Button loading): sin label, aria-hidden.',
+    ],
+    whenNotToUse: [
+      'Carga tan rápida que no requiere indicador.',
+      'Como única señal de estado sin label: no comunicaría nada a lectores de pantalla.',
+    ],
+    behavior:
+      'Por defecto decorativo (aria-hidden, sin rol); con label pasa a role="status" y anuncia el texto. Respeta prefers-reduced-motion. Hereda el color del contexto (currentColor).',
   },
 }
 
@@ -184,6 +271,9 @@ export async function buildAllMetadata(
       })),
       tags: descriptor.tags,
       a11ySummary: descriptor.a11ySummary,
+      ...(descriptor.whenToUse ? { whenToUse: descriptor.whenToUse } : {}),
+      ...(descriptor.whenNotToUse ? { whenNotToUse: descriptor.whenNotToUse } : {}),
+      ...(descriptor.behavior ? { behavior: descriptor.behavior } : {}),
       url: `/components/${component}`,
       sourcePath: `packages/react/src/${component}/${name}.tsx`,
     })

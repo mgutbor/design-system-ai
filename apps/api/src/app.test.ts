@@ -244,6 +244,73 @@ describe('POST /api/ask (F7 §7–§10)', () => {
   })
 })
 
+describe('Rate limiting y límite de body (V1-0, P0-2)', () => {
+  it('a. superar el límite por IP → 429 con Retry-After, sin exponer internals', async () => {
+    const app = createApp({
+      provider: new MockProvider(),
+      rateLimit: { max: 2, windowMs: 60_000 },
+    })
+    const ok1 = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
+    const ok2 = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
+    expect(ok1.status).toBe(200)
+    expect(ok2.status).toBe(200)
+    const blocked = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
+    expect(blocked.status).toBe(429)
+    expect(Number(blocked.headers.get('Retry-After') ?? 0)).toBeGreaterThan(0)
+    const data = (await blocked.json()) as { error: { code: string; message: string } }
+    expect(data.error.code).toBe('rate_limit')
+    expect(blocked.headers.get('Access-Control-Allow-Origin')).toBe('*')
+  })
+
+  it('b. claves distintas no comparten contador (por IP)', async () => {
+    const app = createApp({
+      provider: new MockProvider(),
+      rateLimit: { max: 1, windowMs: 60_000 },
+    })
+    const first = await app.request(`${BASE}/api/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': '203.0.113.1' },
+      body: JSON.stringify({ question: '¿Cómo uso Button?' }),
+    })
+    const second = await app.request(`${BASE}/api/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': '203.0.113.2' },
+      body: JSON.stringify({ question: '¿Cómo uso Button?' }),
+    })
+    expect(first.status).toBe(200)
+    expect(second.status).toBe(200)
+  })
+
+  it('c. health NO se rate-limita (la UI lo consulta al cargar)', async () => {
+    const app = createApp({
+      provider: new MockProvider(),
+      rateLimit: { max: 1, windowMs: 60_000 },
+    })
+    await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
+    await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
+    const health = await app.request(`${BASE}/api/health`)
+    expect(health.status).toBe(200)
+  })
+
+  it('d. body demasiado grande → 413 sin parsear', async () => {
+    const app = createApp({ provider: new MockProvider() })
+    const res = await app.request(`${BASE}/api/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: 'a'.repeat(70_000) }),
+    })
+    expect(res.status).toBe(413)
+    const data = (await res.json()) as { error: { code: string } }
+    expect(data.error.code).toBe('payload_too_large')
+  })
+
+  it('e. body normal sigue funcionando tras el límite', async () => {
+    const app = createApp({ provider: new MockProvider() })
+    const res = await post(app, '/api/ask', { question: '¿Cómo uso Button?' })
+    expect(res.status).toBe(200)
+  })
+})
+
 describe('CORS (F5: docs UI consumes /api/ask cross-origin)', () => {
   it('OPTIONS preflight → 204 with CORS headers', async () => {
     const app = createApp({ provider: new MockProvider() })

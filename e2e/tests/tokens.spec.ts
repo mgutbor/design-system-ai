@@ -30,7 +30,10 @@ test('tokens: categorías, guía de uso, copiar CSS variable y contraste', async
 
   // Copiar la CSS variable de un token semántico.
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
-  const copyButton = page.getByRole('button', { name: 'Copiar --color-action-primary', exact: true })
+  const copyButton = page.getByRole('button', {
+    name: 'Copiar --color-action-primary',
+    exact: true,
+  })
   await copyButton.click()
   await expect(copyButton).toContainText('Copiado')
   const clipboard = await page.evaluate(() => navigator.clipboard.readText())

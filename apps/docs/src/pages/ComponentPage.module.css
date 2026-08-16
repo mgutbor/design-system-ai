@@ -24,6 +24,15 @@
   color: var(--color-text-muted);
 }
 
+.whenList {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
+.whenList li {
+  margin-bottom: var(--space-1);
+}
+
 .examples {
   display: flex;
   flex-direction: column;

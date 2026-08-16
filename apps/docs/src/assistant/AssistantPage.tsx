@@ -1,8 +1,8 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { Badge, Button, type BadgeVariant, type ComponentMetadata } from '@ods-ai/react'
 import componentMetadata from '@ods-ai/react/metadata'
-import { ask, type AskResponse } from './api'
+import { ask, checkHealth, type AskResponse } from './api'
 import styles from './AssistantPage.module.css'
 
 /**
@@ -57,6 +57,9 @@ function componentName(slug: string): string {
   )
 }
 
+const UNAVAILABLE_COPY =
+  'El asistente no está disponible en este momento. El servicio de IA necesita estar conectado.'
+
 const EXAMPLE_QUESTIONS = [
   '¿Cómo uso Button?',
   '¿Qué componente debo usar para seleccionar una opción?',
@@ -68,6 +71,21 @@ export default function AssistantPage() {
   const [status, setStatus] = useState<Status>('idle')
   const [answer, setAnswer] = useState<AskResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [availability, setAvailability] = useState<'checking' | 'available' | 'unavailable'>(
+    'checking',
+  )
+
+  // Disponibilidad del servicio (P1-3): una sola comprobación al montar la
+  // página, con timeout, sin polling. El aviso no bloquea el formulario.
+  useEffect(() => {
+    let active = true
+    checkHealth().then((ok) => {
+      if (active) setAvailability(ok ? 'available' : 'unavailable')
+    })
+    return () => {
+      active = false
+    }
+  }, [])
 
   const canSubmit = question.trim() !== '' && status !== 'loading'
 
@@ -98,6 +116,17 @@ export default function AssistantPage() {
 
   return (
     <div className={styles.page}>
+      {availability === 'unavailable' ? (
+        <p role="status" className={styles.unavailable}>
+          {UNAVAILABLE_COPY}
+        </p>
+      ) : null}
+      {availability === 'available' ? (
+        <p role="status" className={styles.available}>
+          Servicio disponible
+        </p>
+      ) : null}
+
       <section aria-labelledby="assistant-heading">
         <h1 id="assistant-heading">Asistente</h1>
         <p className={styles.lead}>

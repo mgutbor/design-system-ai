@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Route, Routes } from 'react-router'
 import { Spinner } from '@ods-ai/react'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { Layout } from './components/Layout'
 
 // Code-splitting por ruta: la home no carga el DS completo ni los ejemplos.
@@ -21,17 +22,19 @@ export function App() {
         </div>
       }
     >
-      <Routes>
-        <Route element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="getting-started" element={<GettingStarted />} />
-          <Route path="foundations/tokens" element={<Tokens />} />
-          <Route path="components" element={<ComponentsIndex />} />
-          <Route path="components/:slug" element={<ComponentPage />} />
-          <Route path="assistant" element={<AssistantPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
+      <ErrorBoundary>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="getting-started" element={<GettingStarted />} />
+            <Route path="foundations/tokens" element={<Tokens />} />
+            <Route path="components" element={<ComponentsIndex />} />
+            <Route path="components/:slug" element={<ComponentPage />} />
+            <Route path="assistant" element={<AssistantPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </ErrorBoundary>
     </Suspense>
   )
 }

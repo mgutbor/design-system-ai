@@ -1,0 +1,16 @@
+.fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  max-width: 32rem;
+  margin: var(--space-8) auto;
+  padding: var(--space-6);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-elevated);
+}
+
+.fallback h1 {
+  margin: 0;
+}

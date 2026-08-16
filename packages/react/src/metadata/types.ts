@@ -33,6 +33,12 @@ export interface ComponentMetadata {
   examples: Array<Pick<ComponentExample, 'id' | 'title' | 'description' | 'code'>>
   tags: string[]
   a11ySummary: string
+  /** Cuándo usar el componente — guía de decisión (V1-0, P1-1). */
+  whenToUse?: string[]
+  /** Cuándo NO usar el componente — anti-patrones (V1-0, P1-1). */
+  whenNotToUse?: string[]
+  /** Comportamiento relevante no evidente desde la API (foco, ARIA, estados). */
+  behavior?: string
   /** Canonical route in the docs app. */
   url: string
   /** Canonical source path in the repository. */

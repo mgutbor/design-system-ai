@@ -23,7 +23,16 @@ function selectProvider() {
 }
 
 const provider = selectProvider()
-const app = createApp({ provider })
+
+// Rate limiting (V1-0, P0-2): activo por defecto (60 req/min por IP);
+// RATE_LIMIT_MAX=0 lo desactiva (p. ej. dev local o detrás de un proxy
+// que ya limita). En memoria: válido para una sola instancia (deploy.md).
+const rateLimitMax = Number(process.env.RATE_LIMIT_MAX ?? 60)
+const rateLimitWindowMs = Number(process.env.RATE_LIMIT_WINDOW_MS ?? 60_000)
+const app = createApp({
+  provider,
+  ...(rateLimitMax > 0 ? { rateLimit: { max: rateLimitMax, windowMs: rateLimitWindowMs } } : {}),
+})
 
 const port = Number(process.env.PORT ?? 3001)
 serve({ fetch: app.fetch, port }, (info) => {

@@ -73,11 +73,17 @@ describe('AssistantPage (F5, P1)', () => {
     fetchMock.mockResolvedValue(mockResponse(groundedAnswer()))
     renderAssistant()
     await submitQuestion('¿Cómo uso Button?')
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
-    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
-    expect(url).toContain('/api/ask')
-    expect(init.method).toBe('POST')
-    expect(JSON.parse(String(init.body))).toEqual({ question: '¿Cómo uso Button?' })
+    // El health check al montar también usa fetch: buscamos la llamada a /api/ask.
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some((call) => String(call[0]).includes('/api/ask'))).toBe(true)
+    })
+    const askCall = fetchMock.mock.calls.find((call) => String(call[0]).includes('/api/ask')) as [
+      string,
+      RequestInit,
+    ]
+    expect(askCall[0]).toContain('/api/ask')
+    expect(askCall[1].method).toBe('POST')
+    expect(JSON.parse(String(askCall[1].body))).toEqual({ question: '¿Cómo uso Button?' })
   })
 
   it('3. loading: el botón queda disabled + aria-busy mientras la petición está en curso', async () => {
@@ -194,7 +200,7 @@ describe('AssistantPage (F5, P1)', () => {
     expect(screen.getByRole('button', { name: 'Preguntar' })).toBeEnabled()
   })
 
-  it('9. pregunta vacía: el botón permanece deshabilitado y la API nunca se llama', async () => {
+  it('9. pregunta vacía: el botón permanece deshabilitado y la API de ask nunca se llama', async () => {
     renderAssistant()
     const ask = screen.getByRole('button', { name: 'Preguntar' })
     const user = userEvent.setup()
@@ -202,7 +208,7 @@ describe('AssistantPage (F5, P1)', () => {
     expect(ask).toBeDisabled()
     await user.clear(screen.getByLabelText('Tu pregunta'))
     expect(ask).toBeDisabled()
-    expect(fetchMock).not.toHaveBeenCalled()
+    expect(fetchMock.mock.calls.some((call) => String(call[0]).includes('/api/ask'))).toBe(false)
   })
 
   it('10. fuentes inexistentes: nunca se muestran componentes fuera del retrieval', async () => {
@@ -262,5 +268,25 @@ describe('AssistantPage (F5, P1)', () => {
     expect(within(sources).getByRole('link', { name: 'Select' })).toBeInTheDocument()
     // El modelo interno del proveedor nunca se muestra.
     expect(screen.queryByText('mock-1')).toBeNull()
+  })
+
+  it('13. health ok → indica "Servicio disponible" (P1-3)', async () => {
+    fetchMock.mockResolvedValue(mockResponse({ status: 'ok', provider: 'mock' }))
+    renderAssistant()
+    expect(await screen.findByText('Servicio disponible')).toBeInTheDocument()
+    expect(screen.queryByText(/no está disponible/)).toBeNull()
+  })
+
+  it('14. health falla → aviso de no disponible sin bloquear el formulario (P1-3)', async () => {
+    fetchMock.mockRejectedValue(new TypeError('Failed to fetch'))
+    renderAssistant()
+    expect(
+      await screen.findByText(/El asistente no está disponible en este momento/),
+    ).toBeInTheDocument()
+    // El formulario sigue usable: se puede escribir (no se bloquea).
+    expect(screen.getByRole('button', { name: 'Preguntar' })).toBeDisabled()
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText('Tu pregunta'), '¿Cómo uso Button?')
+    expect(screen.getByRole('button', { name: 'Preguntar' })).toBeEnabled()
   })
 })

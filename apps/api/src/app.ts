@@ -1,6 +1,8 @@
 import { Hono, type Context } from 'hono'
+import { bodyLimit } from 'hono/body-limit'
 import { randomUUID } from 'node:crypto'
 import { AIProviderError, answerQuestion, type AIProvider } from '@ods-ai/ai-core'
+import { createRateLimiter, type RateLimitConfig } from './rateLimit'
 
 /**
  * apps/api (ADR-005, F7 §7–§10).
@@ -15,14 +17,20 @@ import { AIProviderError, answerQuestion, type AIProvider } from '@ods-ai/ai-cor
 /** Maximum question length (chars). Documented limit; SPEC §7 message limit. */
 export const MAX_QUESTION_LENGTH = 4000
 
+/** Maximum request body size (bytes). V1-0 (P0-2): evita abuso de memoria. */
+export const MAX_BODY_BYTES = 64 * 1024
+
 export interface AppDeps {
   provider: AIProvider
   /** Injectable for tests; defaults to AI Core defaults. */
   minScore?: number
   topK?: number
+  /** Rate limiting por IP (en memoria). Si se omite, no se aplica. */
+  rateLimit?: RateLimitConfig
 }
 
-export function createApp({ provider, minScore, topK }: AppDeps) {
+export function createApp({ provider, minScore, topK, rateLimit }: AppDeps) {
+  const limiter = rateLimit !== undefined ? createRateLimiter(rateLimit) : undefined
   const app = new Hono()
 
   // CORS (ADR-005: "pendiente hasta que exista UI del asistente" — F5).
@@ -43,72 +51,112 @@ export function createApp({ provider, minScore, topK }: AppDeps) {
     return c.json({ status: 'ok', provider: provider.id })
   })
 
-  app.post('/api/ask', async (c) => {
-    const requestId = randomUUID()
-
-    // 1. Parse and validate (F7 §8) — safe, no internal details leaked.
-    let question: unknown
-    try {
-      const body = await c.req.json<unknown>()
-      question = (body as { question?: unknown })?.question
-    } catch {
-      return c.json(
-        {
-          error: {
-            code: 'invalid_request',
-            message: 'Request body must be valid JSON.',
-            requestId,
+  app.post(
+    '/api/ask',
+    // 0. Seguridad básica de entrada (V1-0, P0-2).
+    //    b) Límite de tamaño del body: se aplica DURANTE la lectura del
+    //       stream (no confiamos en Content-Length: los proxies y el fetch de
+    //       Node no siempre lo exponen en los headers).
+    bodyLimit({
+      maxSize: MAX_BODY_BYTES,
+      onError: (c) =>
+        c.json(
+          {
+            error: {
+              code: 'payload_too_large',
+              message: `Request body must not exceed ${MAX_BODY_BYTES} bytes.`,
+              requestId: randomUUID(),
+            },
           },
-        },
-        400,
-      )
-    }
+          413,
+        ),
+    }),
+    async (c) => {
+      const requestId = randomUUID()
 
-    if (typeof question !== 'string') {
-      return c.json(
-        { error: { code: 'invalid_request', message: '"question" must be a string.', requestId } },
-        400,
-      )
-    }
-    const trimmed = question.trim()
-    if (trimmed === '') {
-      return c.json(
-        { error: { code: 'invalid_request', message: '"question" must not be empty.', requestId } },
-        400,
-      )
-    }
-    if (trimmed.length > MAX_QUESTION_LENGTH) {
-      return c.json(
-        {
-          error: {
-            code: 'invalid_request',
-            message: `"question" must not exceed ${MAX_QUESTION_LENGTH} characters.`,
-            requestId,
+      //    a) Rate limit por IP antes de parsear (health queda exento: es
+      //       barato y lo consume la UI del asistente).
+      const forwarded = c.req.header('x-forwarded-for')
+      const ip = forwarded?.split(',')[0]?.trim() ?? 'unknown'
+      if (limiter !== undefined) {
+        const result = limiter.check(ip)
+        if (!result.allowed) {
+          c.header('Retry-After', String(Math.ceil((result.retryAfterMs ?? 0) / 1000)))
+          return c.json(
+            { error: { code: 'rate_limit', message: 'Too many requests.', requestId } },
+            429,
+          )
+        }
+      }
+
+      // 1. Parse and validate (F7 §8) — safe, no internal details leaked.
+      let question: unknown
+      try {
+        const body = await c.req.json<unknown>()
+        question = (body as { question?: unknown })?.question
+      } catch {
+        return c.json(
+          {
+            error: {
+              code: 'invalid_request',
+              message: 'Request body must be valid JSON.',
+              requestId,
+            },
           },
-        },
-        400,
-      )
-    }
+          400,
+        )
+      }
 
-    // 2. AI Core does retrieval → gate → context → prompt → provider → AIAnswer.
-    //    The API never touches those internals (F7 §14).
-    try {
-      const answer = await answerQuestion({
-        provider,
-        question: trimmed,
-        options: {
-          ...(minScore !== undefined ? { minScore } : {}),
-          ...(topK !== undefined ? { topK } : {}),
-        },
-      })
-      // The AIAnswer IS the response contract (F7 §7) — no field-by-field
-      // reconstruction. Refusals pass through unchanged (confidence "none",
-      // referencedComponents []).
-      return c.json({ requestId, ...answer })
-    } catch (error) {
-      return mapError(c, error, requestId)
-    }
-  })
+      if (typeof question !== 'string') {
+        return c.json(
+          {
+            error: { code: 'invalid_request', message: '"question" must be a string.', requestId },
+          },
+          400,
+        )
+      }
+      const trimmed = question.trim()
+      if (trimmed === '') {
+        return c.json(
+          {
+            error: { code: 'invalid_request', message: '"question" must not be empty.', requestId },
+          },
+          400,
+        )
+      }
+      if (trimmed.length > MAX_QUESTION_LENGTH) {
+        return c.json(
+          {
+            error: {
+              code: 'invalid_request',
+              message: `"question" must not exceed ${MAX_QUESTION_LENGTH} characters.`,
+              requestId,
+            },
+          },
+          400,
+        )
+      }
+
+      // 2. AI Core does retrieval → gate → context → prompt → provider → AIAnswer.
+      //    The API never touches those internals (F7 §14).
+      try {
+        const answer = await answerQuestion({
+          provider,
+          question: trimmed,
+          options: {
+            ...(minScore !== undefined ? { minScore } : {}),
+            ...(topK !== undefined ? { topK } : {}),
+          },
+        })
+        // The AIAnswer IS the response contract (F7 §7) — no field-by-field
+        // reconstruction. Refusals pass through unchanged (confidence "none",
+        // referencedComponents []).
+        return c.json({ requestId, ...answer })
+      } catch (error) {
+        return mapError(c, error, requestId)
+      }
+    },
+  )
 
   return app
 }

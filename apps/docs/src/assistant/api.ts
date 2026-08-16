@@ -56,6 +56,31 @@ const isErrorBody = (value: unknown): value is { error?: { code?: unknown; messa
  * Nunca muestra internals: los errores se tipan por código y el mensaje del
  * servidor solo se propaga si es seguro (la API ya lo sanitiza).
  */
+/**
+ * Comprueba si la API del asistente está disponible (V1-0, P1-3).
+ *
+ * Diseño mínimo: UNA petición al montar la página, con timeout, SIN polling.
+ * GET /api/health no tiene side effects y no está rate-limitado. Si el
+ * origen configurado (VITE_API_BASE_URL) no responde, se considera "no
+ * disponible" — desde la UI no se distingue "no configurada" (default dev
+ * localhost:3001) de "caída": ambas muestran el mismo aviso.
+ */
+export async function checkHealth(timeoutMs = 3000): Promise<boolean> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/health`, {
+      method: 'GET',
+      signal: controller.signal,
+    })
+    return response.ok
+  } catch {
+    return false
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 export async function ask(question: string): Promise<AskResponse> {
   let response: Response
   try {

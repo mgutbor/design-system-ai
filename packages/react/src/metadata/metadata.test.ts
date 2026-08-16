@@ -19,6 +19,9 @@ describe('buildAllMetadata', () => {
       expect(entry.a11ySummary.length).toBeGreaterThan(0)
       expect(entry.tokensUsed.length).toBeGreaterThan(0)
       expect(entry.examples.length).toBeGreaterThan(0)
+      // V1-0 (P1-1): guía de decisión presente en todos los componentes.
+      expect(entry.whenToUse?.length ?? 0).toBeGreaterThan(0)
+      expect(entry.whenNotToUse?.length ?? 0).toBeGreaterThan(0)
       for (const example of entry.examples) {
         expect(example.code.length).toBeGreaterThan(0)
       }
@@ -42,5 +45,7 @@ describe('buildAllMetadata', () => {
     )
     expect(button!.tags).toContain('button')
     expect(button!.a11ySummary.length).toBeGreaterThan(0)
+    expect(button!.whenToUse?.some((item) => item.includes('acciones alternativas'))).toBe(true)
+    expect(button!.whenNotToUse?.some((item) => item.includes('navegar'))).toBe(true)
   }, 15_000)
 })

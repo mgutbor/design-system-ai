@@ -193,7 +193,7 @@ Usuario: pregunta
 
 ## 8. Estrategia de documentación (ADR-006)
 
-Fuente única en la carpeta del componente (`docs.mdx`, `examples.tsx`, tipos) + tokens. Storybook = entorno de desarrollo; docs app (F4) = producto público; playground (F4) = aplicación de referencia. Reglas anti-duplicación: ejemplos solo en `*.examples.tsx` (importados por stories y docs app, y embebidos en la metadata JSON consumida por knowledge), props generadas de tipos, tablas de tokens generadas.
+Fuente única: la **metadata JSON generada** es el contrato de datos (guía de uso, ejemplos canónicos, props, tokens, a11y). La prosa de guía (descripción, cuándo usar / cuándo NO usar, comportamiento) vive en `COMPONENT_DESCRIPTORS` (`packages/react/src/metadata/metadata.ts`); los ejemplos solo en `*.examples.tsx`; las props se generan de tipos; las tablas de tokens se generan del JSON fuente. **No existe MDX desde V1-0** (los `*.docs.mdx` se migraron a metadata y se eliminaron — ADR-006). Storybook = entorno de desarrollo; docs app (F4) = producto público; playground (F4) = aplicación de referencia.
 
 ## 9. Componentes v1 y Definition of Done
 
@@ -203,7 +203,7 @@ Fuente única en la carpeta del componente (`docs.mdx`, `examples.tsx`, tipos) +
 | F2   | Checkbox · Select          |
 | F3   | Modal · Badge · Spinner    |
 
-Estructura por componente (ej. Button): `Button.tsx` · `Button.types.ts` · `Button.module.css` · `Button.test.tsx` · `Button.stories.tsx` · `Button.docs.mdx` · `Button.examples.tsx` · `index.ts`.
+Estructura por componente (ej. Button): `Button.tsx` · `Button.types.ts` · `Button.module.css` · `Button.test.tsx` · `Button.stories.tsx` · `Button.examples.tsx` · `index.ts`. La guía de uso (cuándo usar / cuándo NO usar / comportamiento) se redacta en `COMPONENT_DESCRIPTORS` y viaja en la metadata generada.
 
 **DoD** (cada componente antes de pasar al siguiente grupo):
 
@@ -215,7 +215,7 @@ Estructura por componente (ej. Button): `Button.tsx` · `Button.types.ts` · `Bu
 - [ ] axe: 0 violaciones (unit + addon-a11y en CI)
 - [ ] Unit tests (variantes, estados, eventos, a11y)
 - [ ] Stories 1+ por variante/estado; interaction tests donde aplique
-- [ ] `docs.mdx` (usage, API, variantes, a11y, cuándo usar/cuándo no)
+- [ ] Guía de uso en `COMPONENT_DESCRIPTORS` (cuándo usar / cuándo NO usar) emitida a la metadata
 - [ ] Ejemplos canónicos en `*.examples.tsx` (fuente única)
 - [ ] Metadata generada y válida; indexada por knowledge
 - [ ] CI verde (lint, typecheck, unit, build)

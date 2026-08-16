@@ -10,8 +10,10 @@ name: Release
 #   2. Si no hay changesets pendientes → publica las versiones actuales en
 #      npm (`publish`), p. ej. el primer release de 0.1.0.
 #
-# Requiere un secreto de GitHub: NPM_TOKEN (token de npm con permiso de
-# publicación). Ningún secreto se almacena en el repositorio.
+# Publicación mediante npm Trusted Publishing (OIDC): `npm publish` se
+# autentica con el token OIDC de GitHub Actions (permissions.id-token: write)
+# intercambiado por npm. No se utiliza ningún secreto de npm; NPM_TOKEN no
+# forma parte del proceso. Ningún secreto se almacena en el repositorio.
 
 on:
   workflow_dispatch:
@@ -22,6 +24,10 @@ jobs:
   release:
     name: Version & publish
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # changesets/action: push de versiones y tags
+      pull-requests: write # changesets/action: PR "Version Packages"
+      id-token: write # OIDC: emisión del token para npm Trusted Publishing
     steps:
       - uses: actions/checkout@v4
 
@@ -31,7 +37,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22 # >= 22.14.0 (requisito de trusted publishing)
           cache: pnpm
 
       - name: Install dependencies
@@ -43,11 +49,26 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # Trusted publishing (OIDC) requiere npm CLI >= 11.5.1; el npm incluido
+      # con Node 22 es 10.x, por lo que se actualiza explícitamente.
+      - name: Ensure npm >= 11.5.1 for trusted publishing
+        run: npm install -g npm@latest
+
+      # Sin NPM_TOKEN: npm publish se autentica con el token OIDC de GitHub
+      # (id-token: write) intercambiado por npm. No se usa `registry-url` en
+      # setup-node para evitar generar un _authToken que interfiera con OIDC.
       - name: Create Release Pull Request or Publish to npm
+        id: changesets
         uses: changesets/action@v1
         with:
           version: pnpm exec changeset version
           publish: pnpm exec changeset publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Evidencia explícita del resultado de changesets/action en los logs.
+      - name: Show publish result
+        run: |
+          echo "published: ${{ steps.changesets.outputs.published }}"
+          echo "publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}"
+          echo "hasChangesets: ${{ steps.changesets.outputs.hasChangesets }}"

@@ -254,7 +254,7 @@ cada una endureció con tests la fase que le precede.
 1. **Build de publicación**: `@ods-ai/react` compila a dist (tsc + d.ts + CSS modules copiados) sin dependencias nuevas; `@ods-ai/tokens` genera dist ya validado. Tarballs inspeccionados (`npm pack --dry-run`): solo dist + package.json, sin tests/stories/docs/coverage/secretos.
 2. **Versiones/metadata**: `@ods-ai/tokens` y `@ods-ai/react` en **0.1.0**, `private: false`, `license: MIT`, `publishConfig.access: public`; paquetes internos (knowledge/ai-core/ai-providers/api) siguen privados.
 3. **Changesets**: configurado (`.changeset/config.json`, acceso público, ignore de paquetes internos); primer changeset consumido → CHANGELOG.md de 0.1.0 generado.
-4. **Release workflow**: `.github/workflows/release.yml` (changesets/action — versiona vía PR y publica desde main; requiere secreto `NPM_TOKEN`; CI normal sigue offline).
+4. **Release workflow**: `.github/workflows/release.yml` (changesets/action — solo `workflow_dispatch`, un push a main nunca publica; publica mediante **npm Trusted Publishing/OIDC** con `permissions.id-token: write` y npm CLI >= 11.5.1, **sin secreto `NPM_TOKEN`**; CI normal sigue offline).
 5. **a11y manual**: [docs/a11y-audit.md](a11y-audit.md) — 8 componentes, 0 FAIL, SR real NO VERIFICABLE.
 6. **Lighthouse**: docs en producción → **performance 99 · accessibility 100 · best-practices 100 · seo 100** (≥95 cumplido; ver [docs/release.md](release.md)).
 7. **E2E asistente**: grounded + Sources + confidence + refusal + **error HTTP** + axe (5 tests).
@@ -262,8 +262,8 @@ cada una endureció con tests la fase que le precede.
 
 **Pendiente para publicar (requiere tu acción):**
 
-1. **Publicar** `@ods-ai/tokens` y `@ods-ai/react` (npm publish desde el release workflow; requiere `NPM_TOKEN` como GitHub Secret y el repo en GitHub).
-2. **`repository`/`homepage`** en los package.json cuando exista la URL del repo en GitHub (no se inventa).
+1. **Publicar** `@ods-ai/tokens` y `@ods-ai/react`: 0.1.0 publicado manualmente con 2FA; Trusted Publisher configurado en npmjs.com para ambos (`mgutbor` / `design-system-ai` / `release.yml`). Pendiente: **primera prueba OIDC** (release 0.1.1 vía `workflow_dispatch`).
+2. **`repository`** en los package.json apuntando a `https://github.com/mgutbor/design-system-ai` (requisito de trusted publishing).
 3. Rate limiting (diferido a deployment, como decisión abierta).
 4. Formato eval suite: se valida el formato TS actual como definitivo (SPEC §7b ya lo documenta).
 

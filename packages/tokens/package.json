@@ -5,6 +5,10 @@
   "description": "Design tokens for Open Design System AI: primitive, semantic and theme layers with generated CSS and TypeScript.",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mgutbor/design-system-ai.git"
+  },
   "main": "./dist/tokens.mjs",
   "module": "./dist/tokens.mjs",
   "types": "./dist/tokens.d.ts",

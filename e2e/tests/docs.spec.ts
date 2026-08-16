@@ -17,8 +17,8 @@ test('docs: navigation, canonical example copy and theme toggle', async ({ page 
 
   // Copy-code: copia exactamente el ejemplo canónico.
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
-  await page.getByRole('button', { name: 'Copy code' }).first().click()
-  await expect(page.getByRole('button', { name: 'Code copied' }).first()).toBeVisible()
+  await page.getByRole('button', { name: 'Copiar código' }).first().click()
+  await expect(page.getByRole('button', { name: 'Código copiado' }).first()).toBeVisible()
   const clipboard = await page.evaluate(() => navigator.clipboard.readText())
   expect(clipboard).toContain('<Button>Save changes</Button>')
 

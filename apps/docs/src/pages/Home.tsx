@@ -18,22 +18,23 @@ export default function Home() {
   return (
     <div className={styles.home}>
       <section>
-        <Badge>Open source</Badge>
+        <Badge>Código abierto</Badge>
         <h1>Open Design System AI</h1>
         <p className={styles.lead}>
-          A token-driven design system for accessible React applications — with documentation,
-          canonical examples and an AI assistant grounded in its own documentation.
+          Un sistema de diseño basado en design tokens para aplicaciones React accesibles — con
+          documentación, ejemplos canónicos y un asistente de IA que responde solo con su propia
+          documentación.
         </p>
         <div className={styles.actions}>
-          <Button onClick={() => navigate('/components')}>Browse components</Button>
-          <Button variant="secondary" onClick={() => navigate('/foundations/tokens')}>
-            Explore tokens
+          <Button onClick={() => navigate('/getting-started')}>Empezar</Button>
+          <Button variant="secondary" onClick={() => navigate('/components')}>
+            Explorar componentes
           </Button>
         </div>
       </section>
 
       <section aria-labelledby="components-heading">
-        <h2 id="components-heading">Components</h2>
+        <h2 id="components-heading">Componentes</h2>
         <ul className={styles.grid}>
           {COMPONENT_LINKS.map(([slug, name]) => (
             <li key={slug}>
@@ -47,13 +48,13 @@ export default function Home() {
       </section>
 
       <section aria-labelledby="principles-heading">
-        <h2 id="principles-heading">Principles</h2>
+        <h2 id="principles-heading">Principios</h2>
         <ul className={styles.principles}>
-          <li>Accessible from the start — WCAG 2.2 AA.</li>
-          <li>Small, explicit public APIs.</li>
-          <li>Design tokens as the single source of visual truth.</li>
-          <li>Canonical examples as the only source of example code.</li>
-          <li>Grounded documentation — no invented APIs.</li>
+          <li>Accesible desde el inicio — WCAG 2.2 AA.</li>
+          <li>APIs públicas pequeñas y explícitas.</li>
+          <li>Design tokens como única fuente de verdad visual.</li>
+          <li>Ejemplos canónicos como única fuente de código de ejemplo.</li>
+          <li>Documentación con grounding — sin APIs inventadas.</li>
         </ul>
       </section>
     </div>

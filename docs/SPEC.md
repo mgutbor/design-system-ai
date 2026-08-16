@@ -132,7 +132,7 @@ Reglas estrictas:
 
 ## 6. IA — grounding contract (ADR-004)
 
-- **Retrieval server-side** en `packages/ai-core` (`answerQuestion`), que consume `packages/knowledge` (corpus + retriever + `buildContext`). La metadata es pública y el retrieval determinista, pero se ejecuta en el servidor; la UI (futura) consumirá `apps/api` por HTTP.
+- **Retrieval server-side** en `packages/ai-core` (`answerQuestion`), que consume `packages/knowledge` (corpus + retriever + `buildContext`). La metadata es pública y el retrieval determinista, pero se ejecuta en el servidor; la UI del asistente (`apps/docs` `/assistant`) consume `apps/api` por HTTP.
 - **Gate**: pasa cuando **al menos un resultado alcanza `minScore`**; **solo las fuentes que lo alcanzan** se inyectan en el contexto. Sin fuentes → respuesta determinista "no cubierto", **sin llamada al LLM**.
 - **Síntesis permitida**: el LLM explica, resume, compara, recomienda y combina información recuperada.
 - **Prohibido**: introducir hechos no respaldados por el contexto; **generar código nuevo** (cualquier código mostrado procede verbatim de los ejemplos recuperados/canónicos de `examples.tsx`).
@@ -162,8 +162,8 @@ Usuario: pregunta
 > **Cambio**: el contrato original era `POST /api/chat { messages }` con
 > retrieval client-side y rate limiting en la API (pre-F6). F6 movió la
 > orquestación a AI Core y F7 definió `/api/ask { question }` (ADR-005
-> actualizado). **Rate limiting queda diferido** (no implementado; pendiente de
-> decisión en F5). Streaming SSE futuro.
+> actualizado). **Rate limiting queda diferido; decisión pendiente.** Streaming
+> SSE futuro.
 
 ## 7b. Evaluación determinista (F5/F5.1)
 
@@ -216,18 +216,18 @@ Estado verificado contra la implementación (2026-08). F5.1, F6.1 y F7.1 son
 **hardening/auditorías transversales** (no fases funcionales independientes);
 cada una endureció con tests la fase que le precede.
 
-| Fase   | Contenido                                                                                                         | Estado real                         | Done cuando                                                                       |
-| ------ | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------- |
-| **F0** | Infra + tokens (79 primitivos · 18 semánticos · 0 component) + ADR-001..009 + README                              | ✅ 100%                             | CI verde; tokens validados; Storybook con toggle de tema                          |
-| **F1** | Button, Input, FormField (DoD completo)                                                                           | ✅ 100%                             | 3 componentes con DoD                                                             |
-| **F2** | Checkbox, Select (combobox auditado)                                                                              | ✅ 100%                             | DoD; combobox auditado                                                            |
-| **F3** | Modal, Badge, Spinner + metadata madura (8 JSON + index)                                                          | ✅ 100%                             | 8 componentes                                                                     |
-| **F4** | `apps/docs` + `apps/playground` (copy-code, theme, gaps.md)                                                       | ✅ 100%                             | Playground funcional; Lighthouse ≥95 como **objetivo** (ver F6)                   |
-| **F5** | `knowledge` + eval + tuning · `ai-core` · `ai-providers` (Mock + NVIDIA) · `apps/api` · UI del asistente          | ✅ 100% (validada con llamada real) | Ver abajo: decisiones resueltas en F6 (timeout) y diferidas (rate limiting, eval) |
-| **F6** | Release & Quality: build de publicación, Changesets, release workflow, a11y manual, Lighthouse, polish            | ✅ 100% (release 0.1.1 vía OIDC)    | Ver "Release (F6) — completado" abajo                                             |
-| F5.1   | Hardening knowledge/retrieval: dataset 56 consultas, whitelist de props propias, robustez, integridad de examples | ✅ (transversal)                    | —                                                                                 |
-| F6.1   | Hardening AI Core: gate 20 (escala absoluta), confidence, anti-hallucination programático, invariantes            | ✅ (transversal)                    | —                                                                                 |
-| F7.1   | Hardening API + NvidiaProvider: matriz de entradas, secretos, provider A–Q, prompt injection, concurrencia        | ✅ (transversal)                    | —                                                                                 |
+| Fase   | Contenido                                                                                                         | Estado real                         | Done cuando                                                                           |
+| ------ | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------- |
+| **F0** | Infra + tokens (79 primitivos · 18 semánticos · 0 component) + ADR-001..009 + README                              | ✅ 100%                             | CI verde; tokens validados; Storybook con toggle de tema                              |
+| **F1** | Button, Input, FormField (DoD completo)                                                                           | ✅ 100%                             | 3 componentes con DoD                                                                 |
+| **F2** | Checkbox, Select (combobox auditado)                                                                              | ✅ 100%                             | DoD; combobox auditado                                                                |
+| **F3** | Modal, Badge, Spinner + metadata madura (8 JSON + index)                                                          | ✅ 100%                             | 8 componentes                                                                         |
+| **F4** | `apps/docs` + `apps/playground` (copy-code, theme, gaps.md)                                                       | ✅ 100%                             | Playground funcional; Lighthouse ≥95 como **objetivo** (ver F6)                       |
+| **F5** | `knowledge` + eval + tuning · `ai-core` · `ai-providers` (Mock + NVIDIA) · `apps/api` · UI del asistente          | ✅ 100% (validada con llamada real) | Ver abajo: decisiones resueltas (timeout, formato de eval) y diferida (rate limiting) |
+| **F6** | Release & Quality: build de publicación, Changesets, release workflow, a11y manual, Lighthouse, polish            | ✅ 100% (release 0.1.1 vía OIDC)    | Ver "Release (F6) — completado" abajo                                                 |
+| F5.1   | Hardening knowledge/retrieval: dataset 56 consultas, whitelist de props propias, robustez, integridad de examples | ✅ (transversal)                    | —                                                                                     |
+| F6.1   | Hardening AI Core: gate 20 (escala absoluta), confidence, anti-hallucination programático, invariantes            | ✅ (transversal)                    | —                                                                                     |
+| F7.1   | Hardening API + NvidiaProvider: matriz de entradas, secretos, provider A–Q, prompt injection, concurrencia        | ✅ (transversal)                    | —                                                                                     |
 
 ### F5 — cerrada (2026-08)
 

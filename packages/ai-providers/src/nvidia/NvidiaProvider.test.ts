@@ -226,6 +226,52 @@ describe('NvidiaProvider (F7 §2–§4)', () => {
     await expect(provider.chat(MESSAGES)).rejects.toMatchObject({ code: 'timeout' })
   })
 
+  it('reads NVIDIA_TIMEOUT_MS from the environment when no option is passed', async () => {
+    const prev = process.env.NVIDIA_TIMEOUT_MS
+    process.env.NVIDIA_TIMEOUT_MS = '20'
+    const hangingFetch = ((_url: string | URL | Request, init?: RequestInit) =>
+      new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () =>
+          reject(new DOMException('Aborted', 'AbortError')),
+        )
+      })) as unknown as typeof fetch
+    try {
+      const provider = new NvidiaProvider({ apiKey: 'k', model: 'm', fetch: hangingFetch })
+      const start = Date.now()
+      await expect(provider.chat(MESSAGES)).rejects.toMatchObject({ code: 'timeout' })
+      // Guard temporal: si el env var se ignorara (default 60 s), esto fallaría.
+      expect(Date.now() - start).toBeLessThan(2000)
+    } finally {
+      if (prev === undefined) delete process.env.NVIDIA_TIMEOUT_MS
+      else process.env.NVIDIA_TIMEOUT_MS = prev
+    }
+  })
+
+  it('ignores an invalid NVIDIA_TIMEOUT_MS and falls back to the default', async () => {
+    const prev = process.env.NVIDIA_TIMEOUT_MS
+    process.env.NVIDIA_TIMEOUT_MS = 'not-a-number'
+    try {
+      const provider = new NvidiaProvider({
+        apiKey: 'k',
+        model: 'm',
+        timeoutMs: 5,
+        fetch: ((_url: string | URL | Request, init?: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener('abort', () =>
+              reject(new DOMException('Aborted', 'AbortError')),
+            )
+          })) as unknown as typeof fetch,
+      })
+      // Con la opción explícita el env no interviene; la llamada respeta el
+      // timeout de 5 ms (si el parseo del env rompiera el constructor, esto
+      // lanzaría antes de poder llamar a chat).
+      await expect(provider.chat(MESSAGES)).rejects.toMatchObject({ code: 'timeout' })
+    } finally {
+      if (prev === undefined) delete process.env.NVIDIA_TIMEOUT_MS
+      else process.env.NVIDIA_TIMEOUT_MS = prev
+    }
+  })
+
   it('never exposes the API key in any error', async () => {
     const attempts: Array<() => Promise<unknown>> = [
       () =>

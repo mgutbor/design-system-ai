@@ -51,7 +51,11 @@ export interface NvidiaProviderOptions {
   apiKey?: string
   model?: string
   baseUrl?: string
-  /** Request timeout in ms. Default: 30 000 (SPEC §7: timeout 30s). */
+  /**
+   * Request timeout in ms. Default: 60 000 (latencia real observada 8.5–25.3 s
+   * por respuesta grounded; SPEC §7). Si no se pasa, se lee
+   * `NVIDIA_TIMEOUT_MS` del entorno; si tampoco existe, 60 000.
+   */
   timeoutMs?: number
   /** Injectable fetch for tests. Default: global fetch. */
   fetch?: typeof fetch
@@ -91,7 +95,12 @@ export class NvidiaProvider implements AIProvider {
     this.apiKey = apiKey
     this.model = model
     this.baseUrl = baseUrl.replace(/\/+$/, '')
-    this.timeoutMs = options.timeoutMs ?? 60_000
+    // NVIDIA_TIMEOUT_MS es configurable por entorno (documentado en
+    // .env.example y deploy.md): solo se usa si la opción no viene explícita.
+    const envTimeoutMs = Number(process.env.NVIDIA_TIMEOUT_MS)
+    const defaultTimeoutMs =
+      Number.isFinite(envTimeoutMs) && envTimeoutMs > 0 ? envTimeoutMs : 60_000
+    this.timeoutMs = options.timeoutMs ?? defaultTimeoutMs
     this.fetchImpl = options.fetch ?? globalThis.fetch
   }
 

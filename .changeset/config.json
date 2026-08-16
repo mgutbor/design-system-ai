@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [
+    "@ods-ai/knowledge",
+    "@ods-ai/ai-core",
+    "@ods-ai/ai-providers",
+    "@ods-ai/api",
+    "@ods-ai/docs",
+    "@ods-ai/playground"
+  ]
+}

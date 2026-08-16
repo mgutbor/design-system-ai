@@ -1,5 +1,11 @@
 # @ods-ai/tokens
 
+## 0.1.1
+
+### Patch Changes
+
+- 97e715e: First release published via npm Trusted Publishing (OIDC) from GitHub Actions.
+
 ## 0.1.0
 
 ### Minor Changes

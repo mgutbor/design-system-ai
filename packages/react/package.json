@@ -1,6 +1,6 @@
 {
   "name": "@ods-ai/react",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "description": "Accesibles React components for Open Design System AI (WCAG 2.2 AA): Button, Input, FormField, Checkbox, Select, Modal, Badge, Spinner.",
   "type": "module",

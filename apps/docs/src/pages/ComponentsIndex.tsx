@@ -8,9 +8,10 @@ const metadata = componentMetadata as ComponentMetadata[]
 export default function ComponentsIndex() {
   return (
     <div>
-      <h1>Components</h1>
+      <h1>Componentes</h1>
       <p>
-        Every component ships with canonical examples, API documentation and accessibility notes.
+        Cada componente incluye ejemplos canónicos, documentación de su API y notas de
+        accesibilidad.
       </p>
       <ul className={styles.list}>
         {metadata.map((entry) => (
@@ -20,7 +21,7 @@ export default function ComponentsIndex() {
               <span className={styles.description}>{entry.description}</span>
               <span className={styles.meta}>
                 {entry.variants.length > 0 ? `${entry.variants.join(', ')} · ` : ''}
-                {entry.examples.length} examples
+                {entry.examples.length} ejemplos
               </span>
             </Link>
           </li>

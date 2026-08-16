@@ -28,9 +28,9 @@ export function CodeBlock({ code }: { code: string }) {
           size="sm"
           variant="secondary"
           onClick={copy}
-          aria-label={copied ? 'Code copied' : 'Copy code'}
+          aria-label={copied ? 'Código copiado' : 'Copiar código'}
         >
-          {copied ? 'Copied' : 'Copy'}
+          {copied ? 'Copiado' : 'Copiar'}
         </Button>
       </div>
       <pre className={styles.pre}>

@@ -3,9 +3,9 @@ import { Link } from 'react-router'
 export default function NotFound() {
   return (
     <div>
-      <h1>Page not found</h1>
+      <h1>Página no encontrada</h1>
       <p>
-        <Link to="/">Back to home</Link>
+        <Link to="/">Volver al inicio</Link>
       </p>
     </div>
   )

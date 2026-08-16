@@ -16,9 +16,9 @@ export default function ComponentPage() {
   if (!entry || !examples) {
     return (
       <div>
-        <h1>Component not found</h1>
+        <h1>Componente no encontrado</h1>
         <p>
-          <Link to="/components">Back to components</Link>
+          <Link to="/components">Volver a componentes</Link>
         </p>
       </div>
     )
@@ -33,8 +33,8 @@ export default function ComponentPage() {
 
   return (
     <div className={styles.page}>
-      <nav aria-label="Breadcrumb" className={styles.breadcrumb}>
-        <Link to="/components">Components</Link>
+      <nav aria-label="Miga de pan" className={styles.breadcrumb}>
+        <Link to="/components">Componentes</Link>
         <span aria-hidden="true"> / </span>
         <span>{entry.name}</span>
       </nav>
@@ -45,31 +45,17 @@ export default function ComponentPage() {
         <code>/components/{entry.component}</code>
       </p>
 
-      <section aria-labelledby="api-heading">
-        <h2 id="api-heading">API</h2>
-        <PropTable props={ownProps} />
-        {inheritedProps.length > 0 ? (
-          <details className={styles.inherited}>
-            <summary>
-              HTML attributes &amp; ARIA (inherited) — {inheritedProps.length} props
-            </summary>
-            <PropTable props={inheritedProps} />
-          </details>
-        ) : null}
-      </section>
-
       {entry.variants.length > 0 ? (
         <section aria-labelledby="variants-heading">
-          <h2 id="variants-heading">Variants</h2>
+          <h2 id="variants-heading">Variantes</h2>
           <p>{entry.variants.join(' · ')}</p>
         </section>
       ) : null}
 
       <section aria-labelledby="examples-heading">
-        <h2 id="examples-heading">Examples</h2>
+        <h2 id="examples-heading">Ejemplos</h2>
         <p className={styles.sourceNote}>
-          Canonical examples — single source of truth:{' '}
-          <code>{entry.sourcePath.replace(/\.tsx$/, '.examples.tsx')}</code>
+          Los ejemplos son canónicos: el código que copias es exactamente el que se muestra.
         </p>
         <div className={styles.examples}>
           {examples.map((example) => (
@@ -78,13 +64,24 @@ export default function ComponentPage() {
         </div>
       </section>
 
+      <section aria-labelledby="api-heading">
+        <h2 id="api-heading">API</h2>
+        <PropTable props={ownProps} />
+        {inheritedProps.length > 0 ? (
+          <details className={styles.inherited}>
+            <summary>Atributos HTML y ARIA (heredados) — {inheritedProps.length} props</summary>
+            <PropTable props={inheritedProps} />
+          </details>
+        ) : null}
+      </section>
+
       <section aria-labelledby="accessibility-heading">
-        <h2 id="accessibility-heading">Accessibility</h2>
+        <h2 id="accessibility-heading">Accesibilidad</h2>
         <p>{entry.a11ySummary}</p>
       </section>
 
       <section aria-labelledby="tokens-heading">
-        <h2 id="tokens-heading">Tokens used</h2>
+        <h2 id="tokens-heading">Tokens utilizados</h2>
         <ul className={styles.tokens}>
           {entry.tokensUsed.map((token) => (
             <li key={token}>

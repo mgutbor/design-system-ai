@@ -48,10 +48,10 @@ describe('ComponentPage — API pública (P0)', () => {
 
     const expectedInherited = inheritedCount('button')
     const summary = within(details!).getByText(
-      new RegExp(`HTML attributes & ARIA \\(inherited\\) — ${expectedInherited} props`),
+      new RegExp(`Atributos HTML y ARIA \\(heredados\\) — ${expectedInherited} props`),
     )
     expect(summary).toHaveTextContent(
-      `HTML attributes & ARIA (inherited) — ${expectedInherited} props`,
+      `Atributos HTML y ARIA (heredados) — ${expectedInherited} props`,
     )
 
     // La tabla heredada vive dentro del <details> y contiene props reales.
@@ -62,9 +62,9 @@ describe('ComponentPage — API pública (P0)', () => {
     ).toBeInTheDocument()
   })
 
-  it('3. componente inexistente: página de "not found" sin inventar componentes', () => {
+  it('3. componente inexistente: página de "no encontrado" sin inventar componentes', () => {
     renderAt('/components/date-picker')
-    expect(screen.getByRole('heading', { name: 'Component not found' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Componente no encontrado' })).toBeInTheDocument()
   })
 
   it('4. FormField documenta solo sus props propias (label, htmlFor, description, error, children)', () => {

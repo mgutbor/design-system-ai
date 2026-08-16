@@ -61,6 +61,13 @@ Prohibido: api → knowledge/tokens/react · playground → ai-* · react → ai
 > (+ metadata JSON) y tokens únicamente. La UI del asistente (F5) consume
 > `apps/api` por HTTP en runtime (`VITE_API_BASE_URL`, default
 > `http://localhost:3001`); el retrieval nunca corre en el navegador.
+>
+> **Excepción de tooling (P0)**: `apps/docs` consume un artefacto estático
+> **generado** (`apps/docs/src/data/own-props.generated.ts`, regenerado con
+> `pnpm generate:docs-own-props` desde `OWN_PROPS_BY_COMPONENT` de knowledge).
+> knowledge sigue **fuera del runtime** de apps/docs: las únicas referencias
+> son el script de generación y el test de frescura (tooling/test), y un test
+> guarda que `src/` nunca importe knowledge.
 
 | Paquete                | Rol                                            | Publicación                           |
 | ---------------------- | ---------------------------------------------- | ------------------------------------- |

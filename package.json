@@ -18,6 +18,7 @@
     "storybook": "pnpm -F @ods-ai/tokens generate && storybook dev -p 6006",
     "build-storybook": "pnpm -F @ods-ai/tokens generate && storybook build",
     "build:docs": "pnpm -F @ods-ai/docs build",
+    "generate:docs-own-props": "node apps/docs/scripts/generate-own-props.ts",
     "build:playground": "pnpm -F @ods-ai/playground build",
     "dev:docs": "pnpm -F @ods-ai/docs dev",
     "dev:playground": "pnpm -F @ods-ai/playground dev",

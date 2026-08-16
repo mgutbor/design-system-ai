@@ -22,7 +22,7 @@ export default function Home() {
         <h1>Open Design System AI</h1>
         <p className={styles.lead}>
           A token-driven design system for accessible React applications — with documentation,
-          canonical examples and a future AI assistant grounded in its own documentation.
+          canonical examples and an AI assistant grounded in its own documentation.
         </p>
         <div className={styles.actions}>
           <Button onClick={() => navigate('/components')}>Browse components</Button>

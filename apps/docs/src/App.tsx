@@ -5,6 +5,7 @@ import { Layout } from './components/Layout'
 
 // Code-splitting por ruta: la home no carga el DS completo ni los ejemplos.
 const Home = lazy(() => import('./pages/Home'))
+const GettingStarted = lazy(() => import('./pages/GettingStarted'))
 const Tokens = lazy(() => import('./pages/Tokens'))
 const ComponentsIndex = lazy(() => import('./pages/ComponentsIndex'))
 const ComponentPage = lazy(() => import('./pages/ComponentPage'))
@@ -23,6 +24,7 @@ export function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<Home />} />
+          <Route path="getting-started" element={<GettingStarted />} />
           <Route path="foundations/tokens" element={<Tokens />} />
           <Route path="components" element={<ComponentsIndex />} />
           <Route path="components/:slug" element={<ComponentPage />} />

@@ -1,6 +1,7 @@
 import { componentExamples, type ComponentMetadata } from '@ods-ai/react'
 import componentMetadata from '@ods-ai/react/metadata'
 import { Link, useParams } from 'react-router'
+import { ownPropsFor } from '../data/own-props.generated'
 import { ExampleCard } from '../components/ExampleCard'
 import { PropTable } from '../components/PropTable'
 import styles from './ComponentPage.module.css'
@@ -23,6 +24,13 @@ export default function ComponentPage() {
     )
   }
 
+  // API pública: solo las props propias de ODS AI (artefacto generado desde
+  // OWN_PROPS_BY_COMPONENT). Las props HTML/ARIA heredadas no se ocultan:
+  // viven en una sección secundaria colapsable para no dominar la ficha.
+  const own = new Set(ownPropsFor(entry.component))
+  const ownProps = entry.props.filter((prop) => own.has(prop.name))
+  const inheritedProps = entry.props.filter((prop) => !own.has(prop.name))
+
   return (
     <div className={styles.page}>
       <nav aria-label="Breadcrumb" className={styles.breadcrumb}>
@@ -39,7 +47,15 @@ export default function ComponentPage() {
 
       <section aria-labelledby="api-heading">
         <h2 id="api-heading">API</h2>
-        <PropTable props={entry.props} />
+        <PropTable props={ownProps} />
+        {inheritedProps.length > 0 ? (
+          <details className={styles.inherited}>
+            <summary>
+              HTML attributes &amp; ARIA (inherited) — {inheritedProps.length} props
+            </summary>
+            <PropTable props={inheritedProps} />
+          </details>
+        ) : null}
       </section>
 
       {entry.variants.length > 0 ? (

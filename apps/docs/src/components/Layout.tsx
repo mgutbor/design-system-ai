@@ -32,6 +32,11 @@ export function Layout() {
               </NavLink>
             </li>
             <li>
+              <NavLink to="/getting-started" className={navLinkClass}>
+                Getting started
+              </NavLink>
+            </li>
+            <li>
               <NavLink to="/foundations/tokens" className={navLinkClass}>
                 Foundations
               </NavLink>

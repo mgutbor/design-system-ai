@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
-import { Badge, Button, type BadgeVariant } from '@ods-ai/react'
+import { Link } from 'react-router'
+import { Badge, Button, type BadgeVariant, type ComponentMetadata } from '@ods-ai/react'
+import componentMetadata from '@ods-ai/react/metadata'
 import { ask, type AskResponse } from './api'
 import styles from './AssistantPage.module.css'
 
@@ -7,7 +9,7 @@ import styles from './AssistantPage.module.css'
  * Página del asistente (F5). Flujo: pregunta → POST /api/ask → AIAnswer → UI.
  *
  * Garantías de grounding de la UI:
- * - El panel Sources se construye EXCLUSIVAMENTE desde
+ * - El panel de fuentes se construye EXCLUSIVAMENTE desde
  *   `answer.retrieval.components` (el set que pasó el gate en ai-core). El
  *   texto generado por el LLM nunca se usa como fuente: es imposible que la
  *   UI muestre un componente que no esté en el retrieval recibido.
@@ -15,38 +17,50 @@ import styles from './AssistantPage.module.css'
  *   (`hasRelevantContext` + `confidence`), sin inventar un sistema nuevo.
  * - Refusal: `hasRelevantContext=false` → respuesta de "sin contexto" y sin
  *   fuentes; el provider no fue llamado (garantía de ai-core, no de la UI).
+ *
+ * Presentación (P1): las fuentes se muestran como documentación (enlaces a la
+ * ficha del componente), nunca como detalles internos del algoritmo (score,
+ * minScore, modelo). El texto y los errores están en español.
  */
 
 type Status = 'idle' | 'loading' | 'success' | 'error'
 
 const ERROR_LABELS: Record<string, string> = {
   network:
-    'No se pudo contactar con la API del asistente. Comprueba que está en marcha e inténtalo de nuevo.',
+    'El asistente no está disponible en este momento. El servicio de IA necesita estar conectado.',
   rate_limit:
-    'El proveedor de IA está limitando peticiones. Espera un momento y vuelve a intentarlo.',
-  provider_timeout: 'El proveedor de IA tardó demasiado en responder. Vuelve a intentarlo.',
-  provider_unavailable: 'El proveedor de IA no está disponible ahora mismo. Inténtalo más tarde.',
+    'El servicio de IA está limitando las peticiones. Espera un momento e inténtalo de nuevo.',
+  provider_timeout: 'El servicio de IA tardó demasiado en responder. Inténtalo de nuevo.',
+  provider_unavailable: 'El servicio de IA no está disponible ahora mismo. Inténtalo más tarde.',
   invalid_request: 'La pregunta fue rechazada. Reformúlala e inténtalo de nuevo.',
   internal: 'Algo salió mal en el servidor. Vuelve a intentarlo.',
 }
 
 function groundingStatus(answer: AskResponse): { label: string; variant: BadgeVariant } {
   if (!answer.hasRelevantContext) {
-    return { label: 'No relevant context found', variant: 'neutral' }
+    return { label: 'Sin contexto relevante', variant: 'neutral' }
   }
   if (answer.confidence === 'high') {
-    return { label: 'Grounded · high confidence', variant: 'success' }
+    return { label: 'Con contexto · confianza alta', variant: 'success' }
   }
   if (answer.confidence === 'medium') {
-    return { label: 'Grounded · medium confidence', variant: 'success' }
+    return { label: 'Con contexto · confianza media', variant: 'success' }
   }
-  return { label: 'Grounded · low confidence', variant: 'warning' }
+  return { label: 'Con contexto · confianza baja', variant: 'warning' }
+}
+
+/** Nombre de un componente desde la metadata pública (fallback: slug). */
+function componentName(slug: string): string {
+  return (
+    (componentMetadata as ComponentMetadata[]).find((entry) => entry.component === slug)?.name ??
+    slug
+  )
 }
 
 const EXAMPLE_QUESTIONS = [
-  'How do I use Button?',
-  'What component should I use to select an option?',
-  'How does FormField behave with an error?',
+  '¿Cómo uso Button?',
+  '¿Qué componente debo usar para seleccionar una opción?',
+  '¿Cómo funciona FormField con un error?',
 ] as const
 
 export default function AssistantPage() {
@@ -85,25 +99,26 @@ export default function AssistantPage() {
   return (
     <div className={styles.page}>
       <section aria-labelledby="assistant-heading">
-        <h1 id="assistant-heading">Assistant</h1>
+        <h1 id="assistant-heading">Asistente</h1>
         <p className={styles.lead}>
-          Ask how to use the design system. Answers are grounded exclusively in the retrieved
-          documentation — the assistant never invents components, props, tokens or examples.
+          Pregunta cómo usar el sistema de diseño. Las respuestas se basan exclusivamente en la
+          documentación recuperada: el asistente nunca inventa componentes, props, tokens ni
+          ejemplos.
         </p>
 
         <form className={styles.form} onSubmit={onSubmit}>
           <div className={styles.field}>
-            <label htmlFor="assistant-question">Your question</label>
+            <label htmlFor="assistant-question">Tu pregunta</label>
             <textarea
               id="assistant-question"
               rows={4}
               value={question}
               onChange={(event) => setQuestion(event.target.value)}
-              placeholder="e.g. How do I use Button?"
+              placeholder="p. ej. ¿Cómo uso Button?"
               aria-describedby="assistant-hint"
             />
             <p id="assistant-hint" className={styles.hint}>
-              Try:{' '}
+              Prueba:{' '}
               {EXAMPLE_QUESTIONS.map((example) => (
                 <button
                   key={example}
@@ -118,7 +133,7 @@ export default function AssistantPage() {
           </div>
           <div className={styles.actions}>
             <Button type="submit" loading={status === 'loading'} disabled={!canSubmit}>
-              Ask
+              Preguntar
             </Button>
           </div>
         </form>
@@ -127,7 +142,7 @@ export default function AssistantPage() {
       {error !== null ? (
         <section
           aria-live="polite"
-          aria-label="Assistant error"
+          aria-label="Error del asistente"
           className={styles.error}
           role="alert"
         >
@@ -137,34 +152,29 @@ export default function AssistantPage() {
 
       {answer !== null ? (
         <section aria-labelledby="answer-heading" aria-live="polite" className={styles.result}>
-          <h2 id="answer-heading">Answer</h2>
+          <h2 id="answer-heading">Respuesta</h2>
           {grounding !== null ? (
             <p className={styles.status}>
               <Badge variant={grounding.variant}>{grounding.label}</Badge>
-              {answer.model !== '' ? (
-                <span className={styles.model}>model: {answer.model}</span>
-              ) : null}
             </p>
           ) : null}
           <div className={styles.answerText}>{answer.answer}</div>
 
-          <h3>Sources</h3>
+          <h3>Fuentes de documentación</h3>
           {sources.length === 0 ? (
             <p className={styles.noSources}>
-              No sources retrieved — the documentation had no relevant context for this question.
+              No se recuperó documentación relevante para esta pregunta.
             </p>
           ) : (
-            <>
-              <ul className={styles.sources}>
-                {sources.map((source) => (
-                  <li key={source.component}>
-                    <code>{source.component}</code>
-                    <span className={styles.score}>score {source.score}</span>
-                  </li>
-                ))}
-              </ul>
-              <p className={styles.minScore}>minScore threshold: {answer.retrieval.minScore}</p>
-            </>
+            <ul className={styles.sources}>
+              {sources.map((source) => (
+                <li key={source.component}>
+                  <Link to={`/components/${source.component}`}>
+                    {componentName(source.component)}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           )}
         </section>
       ) : null}

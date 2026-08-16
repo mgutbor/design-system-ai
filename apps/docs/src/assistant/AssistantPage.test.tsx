@@ -2,6 +2,7 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router'
 import './test-utils/setup'
 import { expectNoAxeViolations } from './test-utils/a11y'
 import AssistantPage from './AssistantPage'
@@ -17,14 +18,14 @@ const mockResponse = (data: unknown, status = 200) => ({
 function groundedAnswer(overrides: Partial<AskResponse> = {}): AskResponse {
   return {
     requestId: 'req-test',
-    answer: 'Use Button with variant="primary" and size="md".',
+    answer: 'Usa Button con variant="primary" y size="md".',
     referencedComponents: ['button'],
     confidence: 'high',
     hasRelevantContext: true,
     providerId: 'mock',
     model: 'mock-1',
     retrieval: {
-      query: 'how do i use button',
+      query: 'como uso button',
       components: [{ component: 'button', score: 100 }],
       minScore: 20,
     },
@@ -43,32 +44,40 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-async function submitQuestion(text: string): Promise<void> {
-  const user = userEvent.setup()
-  await user.type(screen.getByLabelText('Your question'), text)
-  await user.click(screen.getByRole('button', { name: 'Ask' }))
+function renderAssistant() {
+  return render(
+    <MemoryRouter>
+      <AssistantPage />
+    </MemoryRouter>,
+  )
 }
 
-describe('AssistantPage (F5)', () => {
+async function submitQuestion(text: string): Promise<void> {
+  const user = userEvent.setup()
+  await user.type(screen.getByLabelText('Tu pregunta'), text)
+  await user.click(screen.getByRole('button', { name: 'Preguntar' }))
+}
+
+describe('AssistantPage (F5, P1)', () => {
   it('1. render inicial: formulario con label, textarea y botón deshabilitado', () => {
-    render(<AssistantPage />)
-    expect(screen.getByRole('heading', { name: 'Assistant' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Your question')).toBeInTheDocument()
-    const ask = screen.getByRole('button', { name: 'Ask' })
+    renderAssistant()
+    expect(screen.getByRole('heading', { name: 'Asistente' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Tu pregunta')).toBeInTheDocument()
+    const ask = screen.getByRole('button', { name: 'Preguntar' })
     // Sin pregunta no se puede enviar (nunca se llama a la API en vacío).
     expect(ask).toBeDisabled()
-    expect(screen.queryByText('Answer')).not.toBeInTheDocument()
+    expect(screen.queryByText('Respuesta')).not.toBeInTheDocument()
   })
 
   it('2. envío de pregunta: fetch a POST /api/ask con la pregunta', async () => {
     fetchMock.mockResolvedValue(mockResponse(groundedAnswer()))
-    render(<AssistantPage />)
-    await submitQuestion('How do I use Button?')
+    renderAssistant()
+    await submitQuestion('¿Cómo uso Button?')
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
     expect(url).toContain('/api/ask')
     expect(init.method).toBe('POST')
-    expect(JSON.parse(String(init.body))).toEqual({ question: 'How do I use Button?' })
+    expect(JSON.parse(String(init.body))).toEqual({ question: '¿Cómo uso Button?' })
   })
 
   it('3. loading: el botón queda disabled + aria-busy mientras la petición está en curso', async () => {
@@ -79,31 +88,29 @@ describe('AssistantPage (F5)', () => {
           resolveFetch = resolve
         }),
     )
-    render(<AssistantPage />)
+    renderAssistant()
     const user = userEvent.setup()
-    await user.type(screen.getByLabelText('Your question'), 'How do I use Button?')
-    await user.click(screen.getByRole('button', { name: 'Ask' }))
-    const ask = screen.getByRole('button', { name: 'Ask' })
+    await user.type(screen.getByLabelText('Tu pregunta'), '¿Cómo uso Button?')
+    await user.click(screen.getByRole('button', { name: 'Preguntar' }))
+    const ask = screen.getByRole('button', { name: 'Preguntar' })
     expect(ask).toBeDisabled()
     expect(ask).toHaveAttribute('aria-busy', 'true')
     // No hay respuesta todavía.
-    expect(screen.queryByText('Answer')).not.toBeInTheDocument()
+    expect(screen.queryByText('Respuesta')).not.toBeInTheDocument()
     resolveFetch!(mockResponse(groundedAnswer()))
-    await waitFor(() => expect(screen.getByText('Answer')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Respuesta')).toBeInTheDocument())
   })
 
   it('4. respuesta grounded: se muestra el texto de la respuesta', async () => {
     fetchMock.mockResolvedValue(mockResponse(groundedAnswer()))
-    render(<AssistantPage />)
-    await submitQuestion('How do I use Button?')
+    renderAssistant()
+    await submitQuestion('¿Cómo uso Button?')
     await waitFor(() =>
-      expect(
-        screen.getByText('Use Button with variant="primary" and size="md".'),
-      ).toBeInTheDocument(),
+      expect(screen.getByText('Usa Button con variant="primary" y size="md".')).toBeInTheDocument(),
     )
   })
 
-  it('5. Sources: se listan los componentes del retrieval con su score', async () => {
+  it('5. fuentes: se listan como documentación (enlaces a las fichas), sin score', async () => {
     fetchMock.mockResolvedValue(
       mockResponse(
         groundedAnswer({
@@ -119,33 +126,34 @@ describe('AssistantPage (F5)', () => {
         }),
       ),
     )
-    render(<AssistantPage />)
+    renderAssistant()
     await submitQuestion('control de formulario')
     const sources = await screen.findByRole('list')
-    await within(sources).findByText('input')
-    expect(within(sources).getByText('select')).toBeInTheDocument()
-    expect(within(sources).getByText('checkbox')).toBeInTheDocument()
-    expect(within(sources).getByText('score 30')).toBeInTheDocument()
-    expect(screen.getByText(/minScore threshold: 20/)).toBeInTheDocument()
+    await within(sources).findByRole('link', { name: 'Input' })
+    expect(within(sources).getByRole('link', { name: 'Select' })).toBeInTheDocument()
+    expect(within(sources).getByRole('link', { name: 'Checkbox' })).toBeInTheDocument()
+    // La jerga interna del retrieval no se muestra al usuario.
+    expect(screen.queryByText(/score/)).toBeNull()
+    expect(screen.queryByText(/minScore/)).toBeNull()
   })
 
   it('6. confidence: high/medium/low se muestran con el estado de grounding correcto', async () => {
     const user = userEvent.setup()
     for (const [confidence, label] of [
-      ['high', 'Grounded · high confidence'],
-      ['medium', 'Grounded · medium confidence'],
-      ['low', 'Grounded · low confidence'],
+      ['high', 'Con contexto · confianza alta'],
+      ['medium', 'Con contexto · confianza media'],
+      ['low', 'Con contexto · confianza baja'],
     ] as const) {
       fetchMock.mockResolvedValue(mockResponse(groundedAnswer({ confidence })))
-      const { unmount } = render(<AssistantPage />)
-      await user.type(screen.getByLabelText('Your question'), 'question')
-      await user.click(screen.getByRole('button', { name: 'Ask' }))
+      const { unmount } = renderAssistant()
+      await user.type(screen.getByLabelText('Tu pregunta'), 'pregunta')
+      await user.click(screen.getByRole('button', { name: 'Preguntar' }))
       await waitFor(() => expect(screen.getByText(label)).toBeInTheDocument())
       unmount()
     }
   })
 
-  it('7. refusal: sin contexto → estado "No relevant context found", sin fuentes', async () => {
+  it('7. refusal: sin contexto → estado "Sin contexto relevante", sin fuentes', async () => {
     fetchMock.mockResolvedValue(
       mockResponse(
         groundedAnswer({
@@ -157,16 +165,14 @@ describe('AssistantPage (F5)', () => {
         }),
       ),
     )
-    render(<AssistantPage />)
+    renderAssistant()
     await submitQuestion('Necesito un DatePicker')
-    await waitFor(() => expect(screen.getByText('No relevant context found')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Sin contexto relevante')).toBeInTheDocument())
     expect(
       screen.getByText('No existe documentación relevante recuperada para esta consulta.'),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(
-        'No sources retrieved — the documentation had no relevant context for this question.',
-      ),
+      screen.getByText('No se recuperó documentación relevante para esta pregunta.'),
     ).toBeInTheDocument()
     expect(screen.queryByRole('list')).not.toBeInTheDocument()
   })
@@ -175,8 +181,8 @@ describe('AssistantPage (F5)', () => {
     fetchMock.mockResolvedValue(
       mockResponse({ error: { code: 'internal', message: 'Internal server error.' } }, 500),
     )
-    render(<AssistantPage />)
-    await submitQuestion('How do I use Button?')
+    renderAssistant()
+    await submitQuestion('¿Cómo uso Button?')
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent(
         'Algo salió mal en el servidor. Vuelve a intentarlo.',
@@ -185,16 +191,16 @@ describe('AssistantPage (F5)', () => {
     // El texto del error interno del servidor nunca se muestra.
     expect(screen.queryByText('Internal server error.')).not.toBeInTheDocument()
     // El formulario sigue usable.
-    expect(screen.getByRole('button', { name: 'Ask' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Preguntar' })).toBeEnabled()
   })
 
   it('9. pregunta vacía: el botón permanece deshabilitado y la API nunca se llama', async () => {
-    render(<AssistantPage />)
-    const ask = screen.getByRole('button', { name: 'Ask' })
+    renderAssistant()
+    const ask = screen.getByRole('button', { name: 'Preguntar' })
     const user = userEvent.setup()
-    await user.type(screen.getByLabelText('Your question'), '   ')
+    await user.type(screen.getByLabelText('Tu pregunta'), '   ')
     expect(ask).toBeDisabled()
-    await user.clear(screen.getByLabelText('Your question'))
+    await user.clear(screen.getByLabelText('Tu pregunta'))
     expect(ask).toBeDisabled()
     expect(fetchMock).not.toHaveBeenCalled()
   })
@@ -209,31 +215,31 @@ describe('AssistantPage (F5)', () => {
           answer: 'Puedes usar DatePicker y Card, además de Button.',
           referencedComponents: ['button'],
           retrieval: {
-            query: 'how do i use button',
+            query: 'como uso button',
             components: [{ component: 'button', score: 100 }],
             minScore: 20,
           },
         }),
       ),
     )
-    render(<AssistantPage />)
-    await submitQuestion('How do I use Button?')
+    renderAssistant()
+    await submitQuestion('¿Cómo uso Button?')
     const sources = await screen.findByRole('list')
-    expect(within(sources).getByText('button')).toBeInTheDocument()
+    expect(within(sources).getByRole('link', { name: 'Button' })).toBeInTheDocument()
     expect(within(sources).queryByText('DatePicker')).toBeNull()
     expect(within(sources).queryByText('Card')).toBeNull()
   })
 
   it('11. accesibilidad básica: sin violaciones axe en estado inicial y tras respuesta', async () => {
     fetchMock.mockResolvedValue(mockResponse(groundedAnswer()))
-    const { container } = render(<AssistantPage />)
+    const { container } = renderAssistant()
     await expectNoAxeViolations(container)
-    await submitQuestion('How do I use Button?')
-    await waitFor(() => expect(screen.getByText('Answer')).toBeInTheDocument())
+    await submitQuestion('¿Cómo uso Button?')
+    await waitFor(() => expect(screen.getByText('Respuesta')).toBeInTheDocument())
     await expectNoAxeViolations(container)
   })
 
-  it('12. integración con la API mediante mock: pregunta → respuesta grounded → sources', async () => {
+  it('12. integración con la API mediante mock: pregunta → respuesta grounded → fuentes', async () => {
     fetchMock.mockResolvedValue(
       mockResponse(
         groundedAnswer({
@@ -246,14 +252,15 @@ describe('AssistantPage (F5)', () => {
         }),
       ),
     )
-    render(<AssistantPage />)
+    renderAssistant()
     await submitQuestion('¿Qué componente sirve para seleccionar una opción?')
     await waitFor(() =>
       expect(screen.getByText('Usa Select para elegir una opción.')).toBeInTheDocument(),
     )
-    expect(screen.getByText('Grounded · high confidence')).toBeInTheDocument()
+    expect(screen.getByText('Con contexto · confianza alta')).toBeInTheDocument()
     const sources = screen.getByRole('list')
-    expect(within(sources).getByText('select')).toBeInTheDocument()
-    expect(screen.getByText('model: mock-1')).toBeInTheDocument()
+    expect(within(sources).getByRole('link', { name: 'Select' })).toBeInTheDocument()
+    // El modelo interno del proveedor nunca se muestra.
+    expect(screen.queryByText('mock-1')).toBeNull()
   })
 })

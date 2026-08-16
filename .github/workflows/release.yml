@@ -52,7 +52,7 @@ jobs:
       # Trusted publishing (OIDC) requiere npm CLI >= 11.5.1; el npm incluido
       # con Node 22 es 10.x, por lo que se actualiza explícitamente.
       - name: Ensure npm >= 11.5.1 for trusted publishing
-        run: npm install -g npm@latest
+        run: npm install -g npm@11
 
       # Sin NPM_TOKEN: npm publish se autentica con el token OIDC de GitHub
       # (id-token: write) intercambiado por npm. No se usa `registry-url` en

@@ -4,7 +4,7 @@ Un design system open source con documentación viva y un AI Assistant que respo
 
 Proyecto de portfolio de arquitectura frontend: monorepo pnpm + Turborepo, design tokens framework-agnósticos, componentes React accesibles (WCAG 2.2 AA), testing (Vitest + RTL + Playwright), Storybook, CI/CD con GitHub Actions y una capa de IA desacoplada del proveedor (NVIDIA Build — gratuito y OpenAI-compatible —, modelo configurable, MockProvider para tests, retrieval determinista).
 
-> **Estado real**: F0–F5 **completas y validadas** (infraestructura, tokens, 8 componentes con DoD, apps/docs, apps/playground, knowledge + AI Core + Mock/NVIDIA + apps/api + **UI del asistente** en `/assistant`; proveedor real NVIDIA Build **validado con llamada real** — modelo `deepseek-ai/deepseek-v4-flash-0731`). F6 **en curso → release candidate**: build de publicación listo, Changesets + release workflow preparados, a11y auditada, Lighthouse ≥95, E2E verdes. F5.1/F6.1/F7.1 fueron auditorías de hardening, no fases funcionales. Detalle en [docs/SPEC.md §11](docs/SPEC.md) y [docs/release.md](docs/release.md).
+> **Estado real**: F0–F6 **completas** (infraestructura, tokens, 8 componentes con DoD, apps/docs, apps/playground, knowledge + AI Core + Mock/NVIDIA + apps/api + UI del asistente + release). `@ods-ai/tokens@0.1.1` y `@ods-ai/react@0.1.1` **publicados en npm** mediante GitHub Actions + **Trusted Publishing (OIDC)** con SLSA provenance (bootstrap 0.1.0 manual con 2FA, histórico). F5.1/F6.1/F7.1 fueron auditorías de hardening, no fases funcionales. Detalle en [docs/SPEC.md §11](docs/SPEC.md) y [docs/release.md](docs/release.md).
 
 ## Documentación
 
@@ -42,6 +42,7 @@ pnpm format:check       # Prettier
 pnpm storybook          # Storybook dev (puerto 6006)
 pnpm build-storybook    # build estático de Storybook
 pnpm e2e                # Playwright (requiere build-storybook previo)
+pnpm exec changeset     # crear un changeset (release de @ods-ai/tokens y @ods-ai/react)
 
 # API local (F5) — MockProvider por defecto, sin API key
 pnpm -F @ods-ai/api dev
@@ -51,6 +52,13 @@ curl -X POST localhost:3001/api/ask -H 'Content-Type: application/json' \
 # Docs dev (asistente en http://localhost:5173/assistant; usa la API en 3001)
 pnpm dev:docs
 ```
+
+## Release
+
+`@ods-ai/tokens` y `@ods-ai/react` se publican manualmente desde GitHub
+Actions (workflow **Release**, solo `workflow_dispatch`; un push a `main` no
+publica) mediante npm Trusted Publishing/OIDC. Procedimiento oficial en
+[docs/release.md](docs/release.md).
 
 ## Licencia
 

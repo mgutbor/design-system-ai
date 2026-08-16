@@ -97,8 +97,8 @@ respuesta, headers ni API keys.
   `Access-Control-Allow-Origin: *` (API pública de documentación, sin
   credenciales ni cookies), métodos `GET, POST, OPTIONS` y preflight OPTIONS
   → 204. No se expone información interna.
-- No hay rate limiting, autenticación de usuario ni cuotas (diferido;
-  pendiente de decisión en F5).
+- No hay rate limiting, autenticación de usuario ni cuotas (diferidos;
+  decisión pendiente).
 
 ## Consumo desde apps/docs (F5)
 

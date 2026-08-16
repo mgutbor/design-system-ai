@@ -1,9 +1,9 @@
 # SPEC v3 — Open Design System AI
 
 Especificación arquitectónica definitiva. Estado: **aprobada**. Estado real del
-proyecto: **F0–F5 completas** · **F6 release candidate ready** · **proyecto ready
-to publish** (validado con llamada real a NVIDIA Build; solo falta publicar
-`@ods-ai/tokens` y `@ods-ai/react` desde el release workflow). Actualizada para
+proyecto: **F0–F6 completas** — `@ods-ai/tokens` y `@ods-ai/react` publicados
+(0.1.0 bootstrap manual con 2FA; **0.1.1 publicado vía GitHub Actions + npm
+Trusted Publishing/OIDC con SLSA provenance**, 2026-08-16). Actualizada para
 reflejar la implementación real validada (retrieval server-side, `POST /api/ask`,
 defaults reales).
 Las fases de hardening F5.1/F6.1/F7.1 se incorporan como auditorías transversales, no
@@ -18,7 +18,7 @@ Un Design System open source con documentación viva y un AI Assistant que ense�
 | Ámbito      | Decisión                                                                                                                                         |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Stack       | Node 22 LTS · pnpm 10 · Turborepo · React 19 + TypeScript 5.9 estricto · Vite · Storybook 10 · Vitest 4 + RTL · Playwright · ESLint 9 + Prettier |
-| Proceso     | GitHub Actions · Changesets diferido a F6 · WCAG 2.2 AA · Documentación en inglés · MIT · light+dark desde F0                                    |
+| Proceso     | GitHub Actions · Changesets diferido a F6 · WCAG 2.2 AA · Documentación en español · MIT · light+dark desde F0                                   |
 | Naming      | "Open Design System AI" · scope `@ods-ai/*` (verificado libre) · repo `open-design-system-ai`                                                    |
 | Componentes | React (ADR-002) · APIs pequeñas, sin polimorfismo en v1 (ADR-007)                                                                                |
 | Diferidos   | Docker, PWA, i18n, visual regression, streaming SSE, Husky/lint-staged, metadata freshness check                                                 |
@@ -62,13 +62,13 @@ Prohibido: api → knowledge/tokens/react · playground → ai-* · react → ai
 > `apps/api` por HTTP en runtime (`VITE_API_BASE_URL`, default
 > `http://localhost:3001`); el retrieval nunca corre en el navegador.
 
-| Paquete                | Rol                                            | Publicación             |
-| ---------------------- | ---------------------------------------------- | ----------------------- |
-| `@ods-ai/tokens`       | Tokens + generador + validador                 | Público (F6, pendiente) |
-| `@ods-ai/react`        | Componentes DS + metadata JSON                 | Público (F6, pendiente) |
-| `@ods-ai/ai-core`      | Port AIProvider + PromptBuilder + orquestación | Privado                 |
-| `@ods-ai/ai-providers` | NVIDIA + Mock                                  | Privado                 |
-| `@ods-ai/knowledge`    | Corpus + retriever + context builder           | Privado                 |
+| Paquete                | Rol                                            | Publicación                           |
+| ---------------------- | ---------------------------------------------- | ------------------------------------- |
+| `@ods-ai/tokens`       | Tokens + generador + validador                 | Público (0.1.1 publicado, 2026-08-16) |
+| `@ods-ai/react`        | Componentes DS + metadata JSON                 | Público (0.1.1 publicado, 2026-08-16) |
+| `@ods-ai/ai-core`      | Port AIProvider + PromptBuilder + orquestación | Privado                               |
+| `@ods-ai/ai-providers` | NVIDIA + Mock                                  | Privado                               |
+| `@ods-ai/knowledge`    | Corpus + retriever + context builder           | Privado                               |
 
 ## 4. Contratos públicos
 
@@ -167,7 +167,7 @@ Usuario: pregunta
 
 ## 7b. Evaluación determinista (F5/F5.1)
 
-- Suite real en `packages/knowledge/src/eval/` (`dataset.ts` con **57 consultas**
+- Suite real en `packages/knowledge/src/eval/` (`dataset.ts` con **56 consultas**
   - `evaluate.ts` con métricas Top-1/Top-3, falsos positivos/negativos,
     negativas rechazadas). Corre como tests de Vitest (`pnpm test`), que está en CI.
 - Resultados F5.1: **Top-1 100% (30/30) · Top-3 100% (36/36) · 20/20 negativas
@@ -216,20 +216,20 @@ Estado verificado contra la implementación (2026-08). F5.1, F6.1 y F7.1 son
 **hardening/auditorías transversales** (no fases funcionales independientes);
 cada una endureció con tests la fase que le precede.
 
-| Fase   | Contenido                                                                                                         | Estado real                           | Done cuando                                                                       |
-| ------ | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------- | --------------------------------------------------------------------------------- |
-| **F0** | Infra + tokens (79 primitivos · 18 semánticos · 0 component) + ADR-001..009 + README                              | ✅ 100%                               | CI verde; tokens validados; Storybook con toggle de tema                          |
-| **F1** | Button, Input, FormField (DoD completo)                                                                           | ✅ 100%                               | 3 componentes con DoD                                                             |
-| **F2** | Checkbox, Select (combobox auditado)                                                                              | ✅ 100%                               | DoD; combobox auditado                                                            |
-| **F3** | Modal, Badge, Spinner + metadata madura (8 JSON + index)                                                          | ✅ 100%                               | 8 componentes                                                                     |
-| **F4** | `apps/docs` + `apps/playground` (copy-code, theme, gaps.md)                                                       | ✅ 100%                               | Playground funcional; Lighthouse ≥95 como **objetivo** (ver F6)                   |
-| **F5** | `knowledge` + eval + tuning · `ai-core` · `ai-providers` (Mock + NVIDIA) · `apps/api` · UI del asistente          | ✅ 100% (validada con llamada real)   | Ver abajo: decisiones resueltas en F6 (timeout) y diferidas (rate limiting, eval) |
-| **F6** | Release & Quality: build de publicación, Changesets, release workflow, a11y manual, Lighthouse, polish            | 🟡 release candidate (falta publicar) | Ver "Release candidate (F6)" abajo                                                |
-| F5.1   | Hardening knowledge/retrieval: dataset 57 consultas, whitelist de props propias, robustez, integridad de examples | ✅ (transversal)                      | —                                                                                 |
-| F6.1   | Hardening AI Core: gate 20 (escala absoluta), confidence, anti-hallucination programático, invariantes            | ✅ (transversal)                      | —                                                                                 |
-| F7.1   | Hardening API + NvidiaProvider: matriz de entradas, secretos, provider A–Q, prompt injection, concurrencia        | ✅ (transversal)                      | —                                                                                 |
+| Fase   | Contenido                                                                                                         | Estado real                         | Done cuando                                                                       |
+| ------ | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------- |
+| **F0** | Infra + tokens (79 primitivos · 18 semánticos · 0 component) + ADR-001..009 + README                              | ✅ 100%                             | CI verde; tokens validados; Storybook con toggle de tema                          |
+| **F1** | Button, Input, FormField (DoD completo)                                                                           | ✅ 100%                             | 3 componentes con DoD                                                             |
+| **F2** | Checkbox, Select (combobox auditado)                                                                              | ✅ 100%                             | DoD; combobox auditado                                                            |
+| **F3** | Modal, Badge, Spinner + metadata madura (8 JSON + index)                                                          | ✅ 100%                             | 8 componentes                                                                     |
+| **F4** | `apps/docs` + `apps/playground` (copy-code, theme, gaps.md)                                                       | ✅ 100%                             | Playground funcional; Lighthouse ≥95 como **objetivo** (ver F6)                   |
+| **F5** | `knowledge` + eval + tuning · `ai-core` · `ai-providers` (Mock + NVIDIA) · `apps/api` · UI del asistente          | ✅ 100% (validada con llamada real) | Ver abajo: decisiones resueltas en F6 (timeout) y diferidas (rate limiting, eval) |
+| **F6** | Release & Quality: build de publicación, Changesets, release workflow, a11y manual, Lighthouse, polish            | ✅ 100% (release 0.1.1 vía OIDC)    | Ver "Release (F6) — completado" abajo                                             |
+| F5.1   | Hardening knowledge/retrieval: dataset 56 consultas, whitelist de props propias, robustez, integridad de examples | ✅ (transversal)                    | —                                                                                 |
+| F6.1   | Hardening AI Core: gate 20 (escala absoluta), confidence, anti-hallucination programático, invariantes            | ✅ (transversal)                    | —                                                                                 |
+| F7.1   | Hardening API + NvidiaProvider: matriz de entradas, secretos, provider A–Q, prompt injection, concurrencia        | ✅ (transversal)                    | —                                                                                 |
 
-### Pendiente para cerrar F5
+### F5 — cerrada (2026-08)
 
 **Implementado (F5):**
 
@@ -241,13 +241,17 @@ cada una endureció con tests la fase que le precede.
 
 - **Proveedor real conectado y validado**: smoke test opt-in (`RUN_NVIDIA_SMOKE=1`) con llamada real a NVIDIA Build. Caso grounded ("¿Cómo uso Button?" → HTTP 200, confidence `high`, `referencedComponents: ["button"]`, spy que confirma **1 llamada al LLM**) y caso refusal ("Necesito un DatePicker" → HTTP 200, confidence `none`, refs `[]`, spy que confirma **0 llamadas al LLM**). Modelo validado: `deepseek-ai/deepseek-v4-flash-0731` (el ID sin sufijo devuelve HTTP 410 Gone en el catálogo actual). Endpoint: `https://integrate.api.nvidia.com/v1` (default en código). La API key vive solo en el entorno local (`~/.ods-ai/nvidia.env`, fuera del repo).
 
-**Solo decisiones pendientes (no bloquean la funcionalidad):**
+**Decisiones resueltas y pendientes (2026-08):**
 
-1. **Decidir rate limiting** (la SPEC original lo incluía; hoy diferido — decisión pendiente).
-2. **Alinear la eval suite con la SPEC** (`evaluations/questions.json` + hit@5 + paso de CI) o validar el formato TS actual como definitivo.
-3. ~~Timeout de producción~~ → **resuelto en F6**: default `NVIDIA_TIMEOUT_MS` subido a **60000** (latencia real observada 8.5–25.3 s; 30 s dejaba margen insuficiente). Sigue siendo configurable por entorno.
+- **Resuelto — timeout de producción**: default `NVIDIA_TIMEOUT_MS` = **60000**
+  (latencia real observada 8.5–25.3 s; 30 s dejaba margen insuficiente).
+  Sigue siendo configurable por entorno.
+- **Resuelto — formato de la eval suite**: se valida el formato TS actual como
+  definitivo (SPEC §7b lo documenta); no se migra a `questions.json` + hit@5.
+- **Pendiente — rate limiting**: la SPEC original lo incluía; hoy **diferido**
+  como decisión abierta (no implementado; ver `docs/api.md`).
 
-### Release candidate (F6) — estado 2026-08-16
+### Release (F6) — completado (2026-08-16)
 
 **Implementado en F6:**
 
@@ -260,12 +264,20 @@ cada una endureció con tests la fase que le precede.
 7. **E2E asistente**: grounded + Sources + confidence + refusal + **error HTTP** + axe (5 tests).
 8. **Timeout NVIDIA**: default `NVIDIA_TIMEOUT_MS` → **60000** (latencia real 8.5–25.3 s).
 
-**Pendiente para publicar (requiere tu acción):**
+**Publicación realizada (2026-08-16):**
 
-1. **Publicar** `@ods-ai/tokens` y `@ods-ai/react`: 0.1.0 publicado manualmente con 2FA; Trusted Publisher configurado en npmjs.com para ambos (`mgutbor` / `design-system-ai` / `release.yml`). Pendiente: **primera prueba OIDC** (release 0.1.1 vía `workflow_dispatch`).
-2. **`repository`** en los package.json apuntando a `https://github.com/mgutbor/design-system-ai` (requisito de trusted publishing).
-3. Rate limiting (diferido a deployment, como decisión abierta).
-4. Formato eval suite: se valida el formato TS actual como definitivo (SPEC §7b ya lo documenta).
+1. `@ods-ai/tokens@0.1.0` y `@ods-ai/react@0.1.0`: **bootstrap publicado
+   manualmente con 2FA** (histórico).
+2. **Trusted Publisher** configurado en npmjs.com para ambos paquetes
+   (`mgutbor` / `design-system-ai` / `release.yml`, sin environment) y
+   `repository.url` añadido a los package.json.
+3. `@ods-ai/tokens@0.1.1` y `@ods-ai/react@0.1.1`: **publicados vía GitHub
+   Actions + npm Trusted Publishing (OIDC)** con **SLSA provenance** verificada
+   (buildType workflow v1, repo `mgutbor/design-system-ai`, commit `2d1e04d`,
+   workflow `release.yml`). El workflow fija npm a **major 11** (fix del
+   TypeError de changesets con npm 12; ver `docs/release.md`).
+
+**Pendiente:** rate limiting (diferido a deployment, decisión abierta).
 
 ### Opcionales / diferidos (no bloqueantes)
 

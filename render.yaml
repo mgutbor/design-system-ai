@@ -25,6 +25,7 @@ services:
     name: ods-ai-api
     runtime: node
     plan: free
+    region: frankfurt
     buildCommand: pnpm -F @ods-ai/tokens build && pnpm -F @ods-ai/react build
     startCommand: pnpm -F @ods-ai/api start
     healthCheckPath: /api/health

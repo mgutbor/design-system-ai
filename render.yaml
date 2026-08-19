@@ -1,0 +1,89 @@
+# Render Blueprint — ODS AI (coste 0 €, plan free)
+#
+# Uso: Render Dashboard → New → Blueprint → seleccionar este repositorio.
+# Durante la creación, Render te pide los valores de las variables con
+# `sync: false` (NVIDIA_API_KEY, CORS_ORIGIN, VITE_API_BASE_URL).
+#
+# Notas:
+# - Root directory: raíz del repo (obligatorio: el build de apps/api y
+#   apps/docs necesita packages/* del workspace).
+# - Build filters: el API solo se redispliega cuando cambian sus fuentes
+#   (y las de packages/*); docs solo con apps/docs y packages/react|tokens.
+# - Region: por defecto oregon. Si prefieres frankfurt (EU), añade
+#   `region: frankfurt` al servicio de la API ANTES de crear el blueprint
+#   (no se puede cambiar después de la creación).
+# - Instalación de dependencias: automática (Render detecta pnpm por
+#   `packageManager` + pnpm-lock.yaml). Si fallara, añadir
+#   SKIP_INSTALL_DEPS=true y anteponer `pnpm install --frozen-lockfile &&`
+#   a los build commands.
+
+services:
+  # ── apps/api → Web Service (Node + Hono, plan free) ──────────────────────
+  # El build compila tokens + react porque knowledge importa
+  # `@ods-ai/react/metadata` (dist) en runtime. Start: tsx sobre el entrypoint.
+  - type: web
+    name: ods-ai-api
+    runtime: node
+    plan: free
+    buildCommand: pnpm -F @ods-ai/tokens build && pnpm -F @ods-ai/react build
+    startCommand: pnpm -F @ods-ai/api start
+    healthCheckPath: /api/health
+    buildFilter:
+      paths:
+        - apps/api/**
+        - packages/ai-core/**
+        - packages/ai-providers/**
+        - packages/knowledge/**
+        - packages/react/**
+        - packages/tokens/**
+        - package.json
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: AI_PROVIDER
+        value: nvidia
+      - key: NVIDIA_MODEL
+        value: deepseek-ai/deepseek-v4-flash-0731
+      - key: NVIDIA_TIMEOUT_MS
+        value: '60000'
+      # TRUST_PROXY=1: Render termina TLS y sobrescribe X-Forwarded-For con la
+      # IP real del cliente (necesario para el rate limit por IP).
+      - key: TRUST_PROXY
+        value: '1'
+      # Secrets / valores que dependen de las URLs de Render (se piden al crear):
+      #   NVIDIA_API_KEY: tu key de NVIDIA Build (nunca en el repo).
+      #   CORS_ORIGIN: https://ods-ai-docs.onrender.com (URL pública de docs).
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+
+  # ── apps/docs → Static Site (Vite SPA, gratis) ───────────────────────────
+  # Build en orden: tokens → react → docs (exports apuntan a dist).
+  # routes: rewrite SPA fallback para refrescos directos (/components/*).
+  - type: web
+    name: ods-ai-docs
+    runtime: static
+    buildCommand: pnpm -F @ods-ai/tokens build && pnpm -F @ods-ai/react build && pnpm -F @ods-ai/docs build
+    staticPublishPath: apps/docs/dist
+    buildFilter:
+      paths:
+        - apps/docs/**
+        - packages/react/**
+        - packages/tokens/**
+        - package.json
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      # VITE_API_BASE_URL (build-time, pública): https://ods-ai-api.onrender.com
+      # (URL pública de la API, sin barra final). Se pide al crear el blueprint.
+      - key: VITE_API_BASE_URL
+        sync: false

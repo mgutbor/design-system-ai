@@ -12,10 +12,11 @@
 # - Region: por defecto oregon. Si prefieres frankfurt (EU), añade
 #   `region: frankfurt` al servicio de la API ANTES de crear el blueprint
 #   (no se puede cambiar después de la creación).
-# - Instalación de dependencias: automática (Render detecta pnpm por
-#   `packageManager` + pnpm-lock.yaml). Si fallara, añadir
-#   SKIP_INSTALL_DEPS=true y anteponer `pnpm install --frozen-lockfile &&`
-#   a los build commands.
+# - Instalación de dependencias: explícita al inicio de cada build command
+#   (`pnpm install --frozen-lockfile`). Necesario: la instalación automática
+#   de Render no deja disponibles las dependencias del workspace (fallo
+#   real: `tsx: not found`). pnpm 10 instala devDeps aunque NODE_ENV sea
+#   production (verificado con pnpm 10.34.5).
 
 services:
   # ── apps/api → Web Service (Node + Hono, plan free) ──────────────────────
@@ -26,7 +27,7 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    buildCommand: pnpm -F @ods-ai/tokens build && pnpm -F @ods-ai/react build
+    buildCommand: pnpm install --frozen-lockfile && pnpm -F @ods-ai/tokens build && pnpm -F @ods-ai/react build
     startCommand: pnpm -F @ods-ai/api start
     healthCheckPath: /api/health
     buildFilter:
@@ -67,7 +68,7 @@ services:
   - type: web
     name: ods-ai-docs
     runtime: static
-    buildCommand: pnpm -F @ods-ai/tokens build && pnpm -F @ods-ai/react build && pnpm -F @ods-ai/docs build
+    buildCommand: pnpm install --frozen-lockfile && pnpm -F @ods-ai/tokens build && pnpm -F @ods-ai/react build && pnpm -F @ods-ai/docs build
     staticPublishPath: apps/docs/dist
     buildFilter:
       paths:

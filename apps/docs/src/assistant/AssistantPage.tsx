@@ -60,6 +60,9 @@ function componentName(slug: string): string {
 const UNAVAILABLE_COPY =
   'El asistente no está disponible en este momento. El servicio de IA necesita estar conectado.'
 
+const WAKING_COPY =
+  'El asistente puede tardar unos segundos en estar disponible tras un periodo de inactividad.'
+
 const EXAMPLE_QUESTIONS = [
   '¿Cómo uso Button?',
   '¿Qué componente debo usar para seleccionar una opción?',
@@ -71,16 +74,18 @@ export default function AssistantPage() {
   const [status, setStatus] = useState<Status>('idle')
   const [answer, setAnswer] = useState<AskResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [availability, setAvailability] = useState<'checking' | 'available' | 'unavailable'>(
-    'checking',
-  )
+  const [availability, setAvailability] = useState<
+    'checking' | 'available' | 'unavailable' | 'waking'
+  >('checking')
 
   // Disponibilidad del servicio (P1-3): una sola comprobación al montar la
-  // página, con timeout, sin polling. El aviso no bloquea el formulario.
+  // página, con timeout, sin polling. El aviso no bloquea el formulario. Si el
+  // health check aborta por timeout, la API puede estar despertando (cold
+  // start de Render Free): se muestra un aviso honesto, no "no disponible".
   useEffect(() => {
     let active = true
-    checkHealth().then((ok) => {
-      if (active) setAvailability(ok ? 'available' : 'unavailable')
+    checkHealth().then((status) => {
+      if (active) setAvailability(status)
     })
     return () => {
       active = false
@@ -116,6 +121,11 @@ export default function AssistantPage() {
 
   return (
     <div className={styles.page}>
+      {availability === 'waking' ? (
+        <p role="status" className={styles.unavailable}>
+          {WAKING_COPY}
+        </p>
+      ) : null}
       {availability === 'unavailable' ? (
         <p role="status" className={styles.unavailable}>
           {UNAVAILABLE_COPY}

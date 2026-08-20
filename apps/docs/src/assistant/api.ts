@@ -63,16 +63,22 @@ const isErrorBody = (value: unknown): value is { error?: { code?: unknown; messa
  * Nunca muestra internals: los errores se tipan por código y el mensaje del
  * servidor solo se propaga si es seguro (la API ya lo sanitiza).
  */
+/** Resultado del health check: disponible, despertando o no disponible. */
+export type HealthStatus = 'available' | 'waking' | 'unavailable'
+
 /**
  * Comprueba si la API del asistente está disponible (V1-0, P1-3).
  *
  * Diseño mínimo: UNA petición al montar la página, con timeout, SIN polling.
- * GET /api/health no tiene side effects y no está rate-limitado. Si el
- * origen configurado (VITE_API_BASE_URL) no responde, se considera "no
- * disponible" — desde la UI no se distingue "no configurada" (default dev
- * localhost:3001) de "caída": ambas muestran el mismo aviso.
+ * GET /api/health no tiene side effects y no está rate-limitado.
+ *
+ * El timeout por defecto (10 s) contempla el arranque del free tier de
+ * Render Free: la instancia se duerme tras un periodo de inactividad y tarda
+ * en despertar. Si la petición se aborta por timeout se devuelve 'waking'
+ * (puede estar despertando), NO 'unavailable', para que la UI no afirme que
+ * el servicio está caído cuando solo tarda en arrancar.
  */
-export async function checkHealth(timeoutMs = 3000): Promise<boolean> {
+export async function checkHealth(timeoutMs = 10_000): Promise<HealthStatus> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
   try {
@@ -80,9 +86,21 @@ export async function checkHealth(timeoutMs = 3000): Promise<boolean> {
       method: 'GET',
       signal: controller.signal,
     })
-    return response.ok
-  } catch {
-    return false
+    return response.ok ? 'available' : 'unavailable'
+  } catch (error) {
+    // Timeout (abort) → la instancia puede estar despertando (cold start).
+    // Se detecta por `name === 'AbortError'` (no por instanceof Error): el
+    // DOMException de fetch abortado no es instanceof Error en todos los
+    // entornos (p. ej. jsdom), pero siempre expone name === 'AbortError'.
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      (error as { name?: unknown }).name === 'AbortError'
+    ) {
+      return 'waking'
+    }
+    // Error de red u otra causa → caída real (o "no configurada" en dev).
+    return 'unavailable'
   } finally {
     clearTimeout(timer)
   }

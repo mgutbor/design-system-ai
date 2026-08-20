@@ -289,4 +289,22 @@ describe('AssistantPage (F5, P1)', () => {
     await user.type(screen.getByLabelText('Tu pregunta'), '¿Cómo uso Button?')
     expect(screen.getByRole('button', { name: 'Preguntar' })).toBeEnabled()
   })
+
+  it('15. health aborta por timeout → aviso honesto de despertar, no "no disponible" (cold start)', async () => {
+    // El health check aborta mientras la instancia de Render Free despierta.
+    fetchMock.mockRejectedValue(new DOMException('Aborted', 'AbortError'))
+    renderAssistant()
+    expect(
+      await screen.findByText(
+        /El asistente puede tardar unos segundos en estar disponible tras un periodo de inactividad/,
+      ),
+    ).toBeInTheDocument()
+    // No se afirma que el servicio esté caído.
+    expect(screen.queryByText(/no está disponible/)).toBeNull()
+    // El formulario sigue usable.
+    expect(screen.getByRole('button', { name: 'Preguntar' })).toBeDisabled()
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText('Tu pregunta'), '¿Cómo uso Button?')
+    expect(screen.getByRole('button', { name: 'Preguntar' })).toBeEnabled()
+  })
 })

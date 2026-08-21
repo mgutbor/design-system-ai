@@ -63,8 +63,27 @@ test('playground: theme toggle and axe on critical flows', async ({ page }) => {
   const toggledTheme = await page.evaluate(() => document.documentElement.dataset.theme)
   expect(toggledTheme).not.toBe(initialTheme)
 
+  // axe muestrea colores computados: tras cada navegación el tema se re-aplica y
+  // el color del Button transiciona durante ~200 ms (--motion-duration-fast).
+  // Esperar a que asiente evita falsos positivos de contraste con colores
+  // intermedios (flakiness observada: 3.66:1 sobre un color a mitad de
+  // transición). El body aplica --color-text-default al instante (sin
+  // transición); el label del Button transiciona hasta ese mismo valor, así
+  // que cuando ambos coinciden la transición ha terminado.
+  const settleThemeTransition = async (): Promise<void> => {
+    await page.waitForFunction(() => {
+      const buttonEl = [...document.querySelectorAll('button')].find((b) =>
+        /Oscuro|Sistema|Claro/.test(b.textContent ?? ''),
+      )
+      const label = buttonEl?.querySelector('span')
+      if (!label) return false
+      return getComputedStyle(label).color === getComputedStyle(document.body).color
+    })
+  }
+
   for (const path of ['/', '/appointments', '/patient', '/states']) {
     await page.goto(`${PLAYGROUND}${path}`)
+    await settleThemeTransition()
     const results = await new AxeBuilder({ page }).analyze()
     expect(
       results.violations.filter((v) => v.impact === 'critical' || v.impact === 'serious'),

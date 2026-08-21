@@ -1,6 +1,6 @@
 {
   "name": "open-design-system-ai",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Open Design System AI — open source design system with documentation and an AI assistant.",
   "packageManager": "pnpm@10.34.5",
